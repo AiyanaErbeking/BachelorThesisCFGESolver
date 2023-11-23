@@ -24,6 +24,7 @@ public class ReductionCfgeSatTest {
         rules.add("Sa");
         rules.add("Xb");
         rules.add("Xc");
+        rules.add("AXY");
 
         C1.setRules(rules);
         C2.setRules(rules);
@@ -31,11 +32,21 @@ public class ReductionCfgeSatTest {
         Set<String> variables = new HashSet<>();
         variables.add("S");
         variables.add("X");
+        variables.add("A");
 
         C1.setVariables(variables);
 
-        System.out.println(reductionCfgeToFolSat.encodingWordStructure(C1, C2));
-        System.out.print(reductionCfgeToFolSat.subwordsLengthOne(C1.getVariables(), C1.getRules(), C1.getName()));
+        Set<String> startVars = new HashSet<>();
+        startVars.add("S1");
+        startVars.add("S2");
+
+        C1.setStartVariables(startVars);
+        C2.setStartVariables(startVars);
+
+        //System.out.println(reductionCfgeToFolSat.encodingWordStructure(C1, C2));
+        //System.out.print(reductionCfgeToFolSat.subwordsLengthOne(C1.getVariables(), C1.getRules(), C1.getName()) + "\n");
+        //System.out.println(reductionCfgeToFolSat.encodingGrammarInequivalence(C1, C2));
+        System.out.println(reductionCfgeToFolSat.subwordsGreaterOne(C1.variables, C1.rules, C1.name));
     }
 
 }
