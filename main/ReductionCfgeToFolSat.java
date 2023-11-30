@@ -1,12 +1,9 @@
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class ReductionCfgeToFolSat extends TPTPWriter{
 
-    protected String reduce(ContextfreeGrammar C1, ContextfreeGrammar C2){
-        return encodingWordStructure(C1, C2) + encodingCYKTable(C1) + encodingCYKTable(C2) + encodingGrammarInequivalence(C1, C2);
+    public String reduce(ContextfreeGrammar C1, ContextfreeGrammar C2){
+        return "(" + encodingWordStructure(C1, C2) + and() + encodingCYKTable(C1) + and() + encodingCYKTable(C2) + and() + encodingGrammarInequivalence(C1, C2) + ")";
     }
 
     /**
@@ -55,7 +52,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter{
         Set<String> rules = CFG.getRules();
         String name = CFG.getName();
 
-        return "(" + forAll("X") + forAll("Y") + subwordsLengthOne(variables, rules, name) + or() + subwordsGreaterOne(variables, rules, name) + ")";
+        return "(" + forAll("X") + forAll("Y") + "(" + subwordsLengthOne(variables, rules, name) + and() + subwordsGreaterOne(variables, rules, name) + ") )";
     }
 
     /**
@@ -70,10 +67,23 @@ public class ReductionCfgeToFolSat extends TPTPWriter{
         List<String> productions = new ArrayList<>(rules);
 
         // if position X == position Y
-        String folFormula = "( leq(X, Y)" + and() + "leq(Y, X)" + implies() + "( ";
+        String folFormula = "( ( leq(X, Y)" + and() + "leq(Y, X)" + " )" + implies() + "( ";
 
+        Set<String> varWithTerminalRule = new HashSet<>();
         for (String var : vars){
-            if (!Objects.equals(vars.get(0), var)){
+            for (String rule : productions) {
+                if (rule.length() == 2) {
+                    if (Objects.equals(rule.substring(0, 1), var)) {
+                        varWithTerminalRule.add(var);
+                    }
+                }
+            }
+        }
+
+        List<String> varsWithTerminalRule = new ArrayList<>(varWithTerminalRule);
+
+        for (String var : varsWithTerminalRule){
+            if (!Objects.equals(varsWithTerminalRule.get(0), var)){
                 folFormula += and();
             }
 
@@ -126,39 +136,50 @@ public class ReductionCfgeToFolSat extends TPTPWriter{
         // if position X < position Y
         String folFormula = "( " + lessthan(positionX, positionY) + implies();
 
-        for (String var : vars) {
-
-            if (!Objects.equals(vars.get(0), var)) {
-                folFormula += and();
-            }
-
-            folFormula += "( " + tableau(name, var, positionX, positionY) + equivalent();
-
-            folFormula += exists(positionK) + "(" + leq(positionX, positionK) + and() + lessthan(positionK, positionY) + and();
-
-            List<String> nonTerminalProductionsFromVar = new ArrayList<>();
-            for (String rule : productions){
-                if (rule.length() == 3){
-                    if (Objects.equals(rule.substring(0, 1), var)){
-                        nonTerminalProductionsFromVar.add(rule);
+        Set<String> varWithNonTerminalRules = new HashSet<>();
+        for (String var : vars){
+            for (String rule : productions) {
+                if (rule.length() == 3) {
+                    if (Objects.equals(rule.substring(0, 1), var)) {
+                        varWithNonTerminalRules.add(var);
                     }
                 }
             }
-
-            folFormula += "( ";
-
-            for (String rule : nonTerminalProductionsFromVar){
-                if (!Objects.equals(nonTerminalProductionsFromVar.get(0), rule)){
-                    folFormula += or();
-                }
-                folFormula += "( " + tableau(name, var, positionX, positionK) + and() + tableau(name, var, positionPlusOne(positionK), positionY) + " )";
-            }
-
-            folFormula += " ) )";
-
-            nonTerminalProductionsFromVar.clear();
-
         }
+
+        List<String> varsWithNonTerminalRules = new ArrayList<>(varWithNonTerminalRules);
+
+        for (String var : varsWithNonTerminalRules) {
+                if (!Objects.equals(varsWithNonTerminalRules.get(0), var)) {
+                    folFormula += and();
+                }
+
+                folFormula += "( " + tableau(name, var, positionX, positionY) + equivalent();
+
+                folFormula += exists(positionK) + "(" + leq(positionX, positionK) + and() + lessthan(positionK, positionY) + and();
+
+                List<String> nonTerminalProductionsFromVar = new ArrayList<>();
+                for (String rule : productions) {
+                    if (rule.length() == 3) {
+                        if (Objects.equals(rule.substring(0, 1), var)) {
+                            nonTerminalProductionsFromVar.add(rule);
+                        }
+                    }
+                }
+
+                folFormula += "( ";
+
+                for (String rule : nonTerminalProductionsFromVar) {
+                    if (!Objects.equals(nonTerminalProductionsFromVar.get(0), rule)) {
+                        folFormula += or();
+                    }
+                    folFormula += "( " + tableau(name, rule.substring(1, 2), positionX, positionK) + and() + positionPlusOne(positionK) + and() + tableau(name, rule.substring(2, 3), "KPlusOne", positionY) + " ) )";
+                }
+
+                folFormula += " ) )";
+
+                nonTerminalProductionsFromVar.clear();
+            }
         return folFormula;
     }
 
@@ -205,7 +226,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter{
             folFormula += tableau(name, start, positionX, positionY);
         }
 
-        folFormula += " ) )";
+        folFormula += " ) ) )";
 
         return folFormula;
     }

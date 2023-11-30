@@ -23,7 +23,7 @@ public class TPTPWriter {
 
     protected String lessthan(String X, String Y){ return leq(X, Y) + and() + not() + "( " + leq(Y, X) + " )"; }
 
-    protected String letter_is(String letter, String position){ return "letter_is_" + letter + (position);}
+    protected String letter_is(String letter, String position){ return "letter_is_" + letter + "(" + position + ")";}
 
     protected String tableau(String name, String var, String positionX, String positionY){
         // predicates can't contain capital letters as these are reserved for variables
@@ -31,6 +31,6 @@ public class TPTPWriter {
         return name + "_tableau_" + lowercaseVar + "(" + positionX + ", " + positionY + ")";
     }
 
-    protected String positionPlusOne(String position){ return exists(position + "PlusOne") + "( " + lessthan(position, position + "PlusOne") + and() + not() + exists("M") + "( " + lessthan("M", position + "PlusOne") + and() + neq("M", position) + and() + not() + "(" + lessthan("M", position) + ") ) )"; }
+    protected String positionPlusOne(String position){ return exists(position + "PlusOne") + "( " + lessthan(position, position + "PlusOne") + and() + not() + exists("M") + "( " + lessthan("M", position + "PlusOne") + and() + neq("M", position) + and() + not() + "(" + lessthan("M", position) + ") )"; }
 
 }
