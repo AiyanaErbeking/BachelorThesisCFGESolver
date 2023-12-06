@@ -1,3 +1,5 @@
+import cfg.ContextfreeGrammar;
+import cfg.ReductionCfgeToFolSat;
 import  org.junit.Test;
 
 import java.util.HashSet;

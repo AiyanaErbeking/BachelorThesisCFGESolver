@@ -1,6 +1,6 @@
-import FOLFormula.FOLFormula;
+import folformula.FOLFormula;
 import org.junit.Test;
-import FOLFormula.Variable;
+import folformula.Variable;
 
 public class FOLFormulaCreationTest {
 
@@ -9,7 +9,7 @@ public class FOLFormulaCreationTest {
 
     @Test
     public void FOLFormulaConstructionTest(){
-        FOLFormula simple = X.and(Y, X);
+        FOLFormula simple = X.and(Y).and(X);
     }
 
 }

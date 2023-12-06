@@ -1,4 +1,4 @@
-package FOLFormula;
+package folformula;
 
 public class Variable extends FOLFormula{
 

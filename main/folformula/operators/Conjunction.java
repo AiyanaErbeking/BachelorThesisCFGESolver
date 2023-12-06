@@ -1,6 +1,8 @@
-package FOLFormula;
+package folformula.operators;
 
-public class Conjunction extends FOLFormula{
+import folformula.FOLFormula;
+
+public class Conjunction extends FOLFormula {
 
     public Conjunction(FOLFormula leftSubFormula, FOLFormula... rightSubformulae) { super(leftSubFormula, rightSubformulae); }
 

@@ -1,3 +1,7 @@
+package cfg;
+
+import cfg.ContextfreeGrammar;
+
 public class ContextfreeGrammarEquivalenceProblem {
 
     public ContextfreeGrammar C1;

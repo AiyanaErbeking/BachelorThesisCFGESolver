@@ -1,3 +1,5 @@
+package cfg;
+
 import java.util.Set;
 
 public class ContextfreeGrammar {

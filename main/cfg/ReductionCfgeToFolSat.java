@@ -1,6 +1,11 @@
+package cfg;
+
+import cfg.ContextfreeGrammar;
+import folformula.writers.TPTPWriter;
+
 import java.util.*;
 
-public class ReductionCfgeToFolSat extends TPTPWriter{
+public class ReductionCfgeToFolSat extends TPTPWriter {
 
     public String reduce(ContextfreeGrammar C1, ContextfreeGrammar C2){
         return "(" + encodingWordStructure(C1, C2) + and() + encodingCYKTable(C1) + and() + encodingCYKTable(C2) + and() + encodingGrammarInequivalence(C1, C2) + ")";

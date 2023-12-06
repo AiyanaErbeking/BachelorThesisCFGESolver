@@ -1,5 +1,9 @@
-package FOLFormula;
+package folformula;
 
+import folformula.operators.Conjunction;
+import folformula.operators.Negation;
+
+import java.util.Iterator;
 import java.util.TreeSet;
 
 public abstract class FOLFormula extends TreeSet<FOLFormula> implements Comparable<FOLFormula>{
@@ -8,7 +12,7 @@ public abstract class FOLFormula extends TreeSet<FOLFormula> implements Comparab
      * the name of a FOL Formula is only != null if it is a Variable.
      * Variable name is only needed for comparison between Variables.
      * */
-    protected String name = null;
+    protected String name;
 
     /**
      * As insertions into a TreeSet require comparison (does an instance of the inserting element already exist in the Set?),
@@ -28,13 +32,15 @@ public abstract class FOLFormula extends TreeSet<FOLFormula> implements Comparab
         int differentlySized = compareBySize(otherFolFormula);
         if (differentlySized != 0) return differentlySized;
 
-        int differentlyClassed;
+        int differentlyClassed = compareByClass(otherFolFormula);
+        if (differentlyClassed != 0) return differentlyClassed;
 
-
-
-        return 0;
+        return compareByChildren(otherFolFormula);
     }
 
+    /**
+     * a name != null is always > a name == null
+     * */
     private int compareByName(FOLFormula otherFolFormula){
 
         if (this.name == null && otherFolFormula.name != null) return -1;
@@ -51,10 +57,38 @@ public abstract class FOLFormula extends TreeSet<FOLFormula> implements Comparab
     }
 
     private int compareByClass(FOLFormula otherFolFormula){
-        int differentlyClassed = this.getClass()
+        int differentlyClassed = this.getClass().getName().compareTo(otherFolFormula.getClass().getName());
+        return differentlyClassed;
     }
 
-    private int compareByChildren(){}
+    private int compareByChildren(FOLFormula otherFolFormula){
+
+        assert this.size() == otherFolFormula.size() : "comparing children despite tree sizes differing. something went wrong";
+
+        Iterator<FOLFormula> this_itr = this.iterator();
+        Iterator<FOLFormula> other_itr = otherFolFormula.iterator();
+
+        //since the iterator only has method for returning NEXT and not current
+        if (this_itr.hasNext() && other_itr.hasNext()){
+            int lastKids = this.last().compareTo(otherFolFormula.last());
+            if (lastKids != 0) return lastKids;
+        }
+
+        //iterator over elems in ascending order
+        while (this_itr.hasNext() && other_itr.hasNext()){
+
+            FOLFormula thisChild = this_itr.next();
+            FOLFormula otherChild = other_itr.next();
+
+            int differingKids = thisChild.compareTo(otherChild);
+
+            if (differingKids != 0) return differingKids;
+
+        }
+
+        return 0;
+
+    }
 
 
 
@@ -68,16 +102,23 @@ public abstract class FOLFormula extends TreeSet<FOLFormula> implements Comparab
         this.name = name;
     }
 
-    public FOLFormula(FOLFormula subFormula){ add(subFormula); }
+    public FOLFormula(FOLFormula subFormula){
+        add(subFormula);
+        this.name = null;
+    }
 
     public FOLFormula(FOLFormula leftSubFormula, FOLFormula... rightSubformulae){
         add(leftSubFormula);
         for (FOLFormula rightSubformula : rightSubformulae){
             add(rightSubformula);
         }
+        this.name = null;
     }
 
     public FOLFormula and(FOLFormula... rightSubformulae){ return new Conjunction(this, rightSubformulae); }
+
+    public FOLFormula not(){ return new Negation(this); }
+
 
 
 }
