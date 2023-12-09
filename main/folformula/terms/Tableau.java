@@ -3,7 +3,7 @@ package folformula.terms;
 import folformula.Variable;
 
 /**
- * a binary relation.
+ * a binary relation. its two fields are necessary for this relation to be adequately named!!!
  * */
 public class Tableau extends Relation{
 

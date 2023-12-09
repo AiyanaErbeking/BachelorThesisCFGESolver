@@ -3,12 +3,14 @@ package folformula.terms;
 import folformula.Variable;
 
 /**
- * a unary relation; but implemented here as a binary relation where the first variable is actually part of the name of the relation
+ * a unary relation; field associatedLetter is necessary for correct naming of this relation!!
  * */
 public class LetterAtPos extends Relation{
 
-    public LetterAtPos(Variable letter, Variable var) {
-        super(letter, var);
+    public String associatedLetter;
+
+    public LetterAtPos(Variable position) {
+        super(position);
     }
 
 }

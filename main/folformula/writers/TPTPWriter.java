@@ -6,6 +6,7 @@ import folformula.Variable;
 import folformula.operators.*;
 import folformula.terms.LEQ;
 import folformula.terms.LetterAtPos;
+import folformula.terms.Tableau;
 
 import java.util.ArrayList;
 
@@ -107,9 +108,15 @@ public class TPTPWriter extends TreeVisitor {
     }
 
     private String inspectLetterAtPos(LetterAtPos tree, ArrayList<String> subFormulae){
-        if (subFormulae.size() != 2) throw new RuntimeException("LetterAtPos with arity != 2");
+        if (subFormulae.size() != 1) throw new RuntimeException("LetterAtPos with arity != 1");
 
-        return getLetterAtPos(subFormulae.get(0), subFormulae.get(1));
+        return getLetterAtPos(tree.associatedLetter, subFormulae.get(0));
+    }
+
+    private String inspectTableau(Tableau tree, ArrayList<String> tuple){
+        if (tuple.size() != 2) throw new RuntimeException("Tableau with arity != 2");
+
+        return getTableau(tree.associatedGrammarName, tree.associatedVariable, tuple.get(0), tuple.get(1));
     }
 
     private String inspectVariable(Variable tree, ArrayList<String> subFormulae){
@@ -123,10 +130,28 @@ public class TPTPWriter extends TreeVisitor {
     public String inspect(Tree currentTree, ArrayList<String> subFormulae){
         if (currentTree instanceof Conjunction)
             return inspectAnd((Conjunction) currentTree, subFormulae);
-        else if (currentTree instanceof Variable) {
+        if (currentTree instanceof Variable)
             return inspectVariable((Variable) currentTree, subFormulae);
-        }
-        return null;
+        if (currentTree instanceof Disjunction)
+            return inspectOr((Disjunction) currentTree, subFormulae);
+        if (currentTree instanceof Equivalence)
+            return inspectEquivalence((Equivalence) currentTree, subFormulae);
+        if (currentTree instanceof Exists)
+            return inspectExists((Exists) currentTree, subFormulae);
+        if (currentTree instanceof ForAll)
+            return inspectForAll((ForAll) currentTree, subFormulae);
+        if (currentTree instanceof Implication)
+            return inspectImplication((Implication) currentTree, subFormulae);
+        if (currentTree instanceof Negation)
+            return inspectNegation((Negation) currentTree, subFormulae);
+        if (currentTree instanceof LEQ)
+            return inspectLeq((LEQ) currentTree, subFormulae);
+        if (currentTree instanceof LetterAtPos)
+            return inspectLetterAtPos((LetterAtPos) currentTree, subFormulae);
+        if (currentTree instanceof Tableau)
+            return inspectTableau((Tableau) currentTree, subFormulae);
+
+        throw new RuntimeException("current formula has no known type");
     }
 
 }
