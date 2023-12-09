@@ -2,14 +2,12 @@ package folformula;
 
 import java.util.ArrayList;
 
-public class Tree {
+public abstract class Tree {
 
-    protected FOLFormula value;
     protected ArrayList<Tree> children;
 
 
-    public Tree(FOLFormula value){
-        this.value = value;
+    public Tree(){
         children = new ArrayList<>();
     }
 
@@ -25,5 +23,9 @@ public class Tree {
     public void addChild(Tree child){
         this.children.add(child);
     }
+
+
+
+
 
 }

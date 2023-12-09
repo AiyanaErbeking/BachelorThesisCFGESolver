@@ -1,6 +1,5 @@
 package cfg;
 
-import cfg.ContextfreeGrammar;
 import folformula.writers.TPTPWriter;
 
 import java.util.*;
@@ -8,7 +7,7 @@ import java.util.*;
 public class ReductionCfgeToFolSat extends TPTPWriter {
 
     public String reduce(ContextfreeGrammar C1, ContextfreeGrammar C2){
-        return "(" + encodingWordStructure(C1, C2) + and() + encodingCYKTable(C1) + and() + encodingCYKTable(C2) + and() + encodingGrammarInequivalence(C1, C2) + ")";
+        return "(" + encodingWordStructure(C1, C2) + getAnd() + encodingCYKTable(C1) + getAnd() + encodingCYKTable(C2) + getAnd() + encodingGrammarInequivalence(C1, C2) + ")";
     }
 
     /**
@@ -27,20 +26,20 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
         if (alphabet.isEmpty()) throw new IllegalStateException("both CFG alphabets are empty!");
 
         String folFormula = "( ";
-        folFormula += forAll("X") + "( ";
+        folFormula += getForAll("X") + "( ";
 
         for (String sigma : alphabet){
             if (!Objects.equals(alphabet.get(0), sigma)){
-                folFormula += or();
+                folFormula += getOr();
             }
 
-            folFormula += "( " + letter_is(sigma, "X");
+            folFormula += "( " + getLetterAtPos(sigma, "X");
 
             List<String> alphabetWithoutSigma = new ArrayList<>(alphabet);
             alphabetWithoutSigma.remove(sigma);
 
             for (String letterNotSigma : alphabetWithoutSigma) {
-                folFormula += and() + not() + letter_is(letterNotSigma, "X");
+                folFormula += getAnd() + getNegation() + getLetterAtPos(letterNotSigma, "X");
             }
             folFormula += " )";
             alphabetWithoutSigma.add(sigma);
@@ -57,7 +56,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
         Set<String> rules = CFG.getRules();
         String name = CFG.getName();
 
-        return "(" + forAll("X") + forAll("Y") + "(" + subwordsLengthOne(variables, rules, name) + and() + subwordsGreaterOne(variables, rules, name) + ") )";
+        return "(" + getForAll("X") + getForAll("Y") + "(" + subwordsLengthOne(variables, rules, name) + getAnd() + subwordsGreaterOne(variables, rules, name) + ") )";
     }
 
     /**
@@ -72,7 +71,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
         List<String> productions = new ArrayList<>(rules);
 
         // if position X == position Y
-        String folFormula = "( ( leq(X, Y)" + and() + "leq(Y, X)" + " )" + implies() + "( ";
+        String folFormula = "( ( leq(X, Y)" + getAnd() + "leq(Y, X)" + " )" + getImplication() + "( ";
 
         Set<String> varWithTerminalRule = new HashSet<>();
         for (String var : vars){
@@ -89,10 +88,10 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
         for (String var : varsWithTerminalRule){
             if (!Objects.equals(varsWithTerminalRule.get(0), var)){
-                folFormula += and();
+                folFormula += getAnd();
             }
 
-            folFormula += "( " + tableau(name, var, "X", "Y") + equivalent();
+            folFormula += "( " + getTableau(name, var, "X", "Y") + getEquivalence();
 
             List<String> terminalProductionsFromVar = new ArrayList<>();
             for (String rule : productions){
@@ -107,9 +106,9 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
             for (String rule : terminalProductionsFromVar){
                 if (!Objects.equals(terminalProductionsFromVar.get(0), rule)){
-                    folFormula += or();
+                    folFormula += getOr();
                 }
-                folFormula += letter_is(rule.substring(1, 2), "X");
+                folFormula += getLetterAtPos(rule.substring(1, 2), "X");
             }
 
             folFormula += " ) )";
@@ -139,7 +138,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
         String positionK = "K";
 
         // if position X < position Y
-        String folFormula = "( " + lessthan(positionX, positionY) + implies();
+        String folFormula = "( " + getLessThan(positionX, positionY) + getImplication();
 
         Set<String> varWithNonTerminalRules = new HashSet<>();
         for (String var : vars){
@@ -156,12 +155,12 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
         for (String var : varsWithNonTerminalRules) {
                 if (!Objects.equals(varsWithNonTerminalRules.get(0), var)) {
-                    folFormula += and();
+                    folFormula += getAnd();
                 }
 
-                folFormula += "( " + tableau(name, var, positionX, positionY) + equivalent();
+                folFormula += "( " + getTableau(name, var, positionX, positionY) + getEquivalence();
 
-                folFormula += exists(positionK) + "(" + leq(positionX, positionK) + and() + lessthan(positionK, positionY) + and();
+                folFormula += getExists(positionK) + "(" + getLeq(positionX, positionK) + getAnd() + getLessThan(positionK, positionY) + getAnd();
 
                 List<String> nonTerminalProductionsFromVar = new ArrayList<>();
                 for (String rule : productions) {
@@ -176,9 +175,9 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
                 for (String rule : nonTerminalProductionsFromVar) {
                     if (!Objects.equals(nonTerminalProductionsFromVar.get(0), rule)) {
-                        folFormula += or();
+                        folFormula += getOr();
                     }
-                    folFormula += "( " + tableau(name, rule.substring(1, 2), positionX, positionK) + and() + positionPlusOne(positionK) + and() + tableau(name, rule.substring(2, 3), "KPlusOne", positionY) + " ) )";
+                    folFormula += "( " + getTableau(name, rule.substring(1, 2), positionX, positionK) + getAnd() + positionPlusOne(positionK) + getAnd() + getTableau(name, rule.substring(2, 3), "KPlusOne", positionY) + " ) )";
                 }
 
                 folFormula += " ) )";
@@ -192,7 +191,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
      * sub-formula: w is generated by C1 iff it is not generated by C2
      * */
     protected String encodingGrammarInequivalence(ContextfreeGrammar C1, ContextfreeGrammar C2){
-        return "( " + wordIsGenerated(C1.getStartVariables(), C1.getName()) + equivalent() + not() + wordIsGenerated(C2.getStartVariables(), C2.getName()) + " )";
+        return "( " + wordIsGenerated(C1.getStartVariables(), C1.getName()) + getEquivalence() + getNegation() + wordIsGenerated(C2.getStartVariables(), C2.getName()) + " )";
     }
 
     /**
@@ -210,25 +209,25 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
         if (startVariables.isEmpty()) throw new IllegalStateException("CFG has no start variables!");
 
         // there exist positions X, Y
-        String folFormula = "( " + exists("X") + exists("Y");
+        String folFormula = "( " + getExists("X") + getExists("Y");
 
         // there does NOT exist a position K which is smaller than X
-        folFormula += "( " + not() + exists("K") + "( leq(K, X)" + and() + not() + "leq(X, K) )";
+        folFormula += "( " + getNegation() + getExists("K") + "( leq(K, X)" + getAnd() + getNegation() + "leq(X, K) )";
 
         // there does NOT exist a position L which is greater than Y
-        folFormula += and() + not() + exists("L") + "( leq(Y, L)" + and() + not() + "leq(L, Y) )";
+        folFormula += getAnd() + getNegation() + getExists("L") + "( leq(Y, L)" + getAnd() + getNegation() + "leq(L, Y) )";
 
-        folFormula += and() + "( ";
+        folFormula += getAnd() + "( ";
 
         List<String> startVars = new ArrayList<>(startVariables);
 
         // and
         for (String start : startVars){
             if (!Objects.equals(startVars.get(0), start)){
-                folFormula += or();
+                folFormula += getOr();
             }
 
-            folFormula += tableau(name, start, positionX, positionY);
+            folFormula += getTableau(name, start, positionX, positionY);
         }
 
         folFormula += " ) ) )";

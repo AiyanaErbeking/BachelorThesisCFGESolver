@@ -1,37 +1,132 @@
 package folformula.writers;
 
-public class TPTPWriter {
+import folformula.Tree;
+import folformula.TreeVisitor;
+import folformula.Variable;
+import folformula.operators.*;
+import folformula.terms.LEQ;
+import folformula.terms.LetterAtPos;
 
-    protected String and(){ return " & "; }
+import java.util.ArrayList;
 
-    protected String or(){ return " | "; }
+public class TPTPWriter extends TreeVisitor {
 
-    protected String equivalent(){ return " <=> "; }
 
-    protected String implies(){ return " => "; }
+    protected String getAnd(){ return " & "; }
 
-    protected String not(){ return " ~ "; }
+    protected String getOr(){ return " | "; }
 
-    protected String forAll(String X){ return "! [" + X + "] : "; }
+    protected String getEquivalence(){ return " <=> "; }
 
-    protected String exists(String X){ return "? [" + X + "] : "; }
+    protected String getImplication(){ return " => "; }
 
-    protected String leq(String X, String Y){ return " leq(" + X + ", " + Y + ")"; }
+    protected String getNegation(){ return " ~ "; }
 
-    protected String eq(String X, String Y){ return leq(X, Y) + and() + leq(Y, X); }
+    protected String getForAll(String X){ return "! [" + X + "] : "; }
 
-    protected String neq(String X, String Y){ return not() + "( " + eq(X, Y) + " )"; }
+    protected String getExists(String X){ return "? [" + X + "] : "; }
 
-    protected String lessthan(String X, String Y){ return leq(X, Y) + and() + not() + "( " + leq(Y, X) + " )"; }
+    protected String getLeq(String X, String Y){ return " leq(" + X + ", " + Y + ")"; }
 
-    protected String letter_is(String letter, String position){ return "letter_is_" + letter + "(" + position + ")";}
+    protected String getEquals(String X, String Y){ return getLeq(X, Y) + getAnd() + getLeq(Y, X); }
 
-    protected String tableau(String name, String var, String positionX, String positionY){
+    protected String getNotEquals(String X, String Y){ return getNegation() + "( " + getEquals(X, Y) + " )"; }
+
+    protected String getLessThan(String X, String Y){ return getLeq(X, Y) + getAnd() + getNegation() + "( " + getLeq(Y, X) + " )"; }
+
+    protected String getLetterAtPos(String letter, String position){ return "letter_is_" + letter + "(" + position + ")";}
+
+    protected String getTableau(String name, String var, String positionX, String positionY){
         // predicates can't contain capital letters as these are reserved for variables
         String lowercaseVar = var.toLowerCase();
         return name + "_tableau_" + lowercaseVar + "(" + positionX + ", " + positionY + ")";
     }
 
-    protected String positionPlusOne(String position){ return exists(position + "PlusOne") + "( " + lessthan(position, position + "PlusOne") + and() + not() + exists("M") + "( " + lessthan("M", position + "PlusOne") + and() + neq("M", position) + and() + not() + "(" + lessthan("M", position) + ") )"; }
+    protected String positionPlusOne(String position){ return getExists(position + "PlusOne") + "( " + getLessThan(position, position + "PlusOne") + getAnd() + getNegation() + getExists("M") + "( " + getLessThan("M", position + "PlusOne") + getAnd() + getNotEquals("M", position) + getAnd() + getNegation() + "(" + getLessThan("M", position) + ") )"; }
+
+
+
+    private String inspectAnd(Conjunction tree, ArrayList<String> subFormulae){
+
+        String conjunction = "";
+
+        for (int i=0; i < subFormulae.size(); i++){
+            if (i != 0) conjunction += getAnd();
+            conjunction += subFormulae.get(i);
+        }
+
+        return "( " + conjunction + " )";
+    }
+
+    private String inspectOr(Disjunction tree, ArrayList<String> subFormulae){
+
+        String disjunction = "";
+
+        for (int i=0; i < subFormulae.size(); i++){
+            if (i != 0) disjunction += getOr();
+            disjunction += subFormulae.get(i);
+        }
+
+        return "( " + disjunction + " )";
+    }
+
+    private String inspectEquivalence(Equivalence tree, ArrayList<String> subFormulae){
+        if (subFormulae.size() != 2) throw new RuntimeException("equivalence with number subFormulae != 2");
+
+        return "( " + subFormulae.get(0) + getEquivalence() + subFormulae.get(1) + " )";
+    }
+
+    private String inspectImplication(Implication tree, ArrayList<String> subFormulae){
+        if (subFormulae.size() != 2) throw new RuntimeException("implication with number subFormulae != 2");
+
+        return "( " + subFormulae.get(0) + getImplication() + subFormulae.get(1) + " )";
+    }
+
+    private String inspectExists(Exists tree, ArrayList<String> subFormulae){
+        if (subFormulae.size() != 2) throw new RuntimeException("exists with number children != 2");
+
+        return "( " + getExists(subFormulae.get(0)) + "( " + subFormulae.get(1) + " ) )";
+    }
+
+    private String inspectForAll(ForAll tree, ArrayList<String> subFormulae){
+        if (subFormulae.size() != 2) throw new RuntimeException("for all with number children != 2");
+
+        return "( " + getForAll(subFormulae.get(0)) + "( " + subFormulae.get(1) + " ) )";
+    }
+
+    private String inspectNegation(Negation tree, ArrayList<String> subFormula){
+        if (subFormula.size() != 1) throw new RuntimeException("negation with number children != 1");
+
+        return "( " + getNegation() + subFormula.get(0) + " )";
+    }
+
+    private String inspectLeq(LEQ tree, ArrayList<String> subFormulae){
+        if (subFormulae.size() != 2) throw new RuntimeException("leq with arity != 2");
+
+        return getLeq(subFormulae.get(0), subFormulae.get(1));
+    }
+
+    private String inspectLetterAtPos(LetterAtPos tree, ArrayList<String> subFormulae){
+        if (subFormulae.size() != 2) throw new RuntimeException("LetterAtPos with arity != 2");
+
+        return getLetterAtPos(subFormulae.get(0), subFormulae.get(1));
+    }
+
+    private String inspectVariable(Variable tree, ArrayList<String> subFormulae){
+
+        assert subFormulae.isEmpty() : "Variable has non-empty list of subformulae...";
+
+        return tree.name;
+    }
+
+    @Override
+    public String inspect(Tree currentTree, ArrayList<String> subFormulae){
+        if (currentTree instanceof Conjunction)
+            return inspectAnd((Conjunction) currentTree, subFormulae);
+        else if (currentTree instanceof Variable) {
+            return inspectVariable((Variable) currentTree, subFormulae);
+        }
+        return null;
+    }
 
 }
