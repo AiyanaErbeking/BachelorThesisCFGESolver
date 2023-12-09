@@ -1,7 +1,5 @@
 package folformula.terms;
 
-import folformula.Variable;
-
 /**
  * a binary relation. its two fields are necessary for this relation to be adequately named!!!
  * */

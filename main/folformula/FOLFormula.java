@@ -1,15 +1,13 @@
 package folformula;
 
 import folformula.operators.*;
+import folformula.terms.Variable;
+import folformula.tree.Tree;
 
-import java.util.Iterator;
-import java.util.TreeSet;
-
-public abstract class FOLFormula extends Tree{
+public abstract class FOLFormula extends Tree {
 
     /**
      * the name of a FOL Formula is only != null if it is a Variable.
-     * Variable name is only needed for comparison between Variables.
      * */
     public String name;
 

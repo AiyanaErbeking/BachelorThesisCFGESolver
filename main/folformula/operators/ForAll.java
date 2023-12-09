@@ -1,7 +1,7 @@
 package folformula.operators;
 
 import folformula.FOLFormula;
-import folformula.Variable;
+import folformula.terms.Variable;
 
 public class ForAll extends Quantifier{
 

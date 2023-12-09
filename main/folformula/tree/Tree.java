@@ -1,4 +1,4 @@
-package folformula;
+package folformula.tree;
 
 import java.util.ArrayList;
 

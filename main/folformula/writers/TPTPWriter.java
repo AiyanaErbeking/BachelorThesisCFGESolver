@@ -1,8 +1,8 @@
 package folformula.writers;
 
-import folformula.Tree;
-import folformula.TreeVisitor;
-import folformula.Variable;
+import folformula.tree.Tree;
+import folformula.tree.TreeVisitor;
+import folformula.terms.Variable;
 import folformula.operators.*;
 import folformula.terms.LEQ;
 import folformula.terms.LetterAtPos;
@@ -86,19 +86,19 @@ public class TPTPWriter extends TreeVisitor {
     private String inspectExists(Exists tree, ArrayList<String> subFormulae){
         if (subFormulae.size() != 2) throw new RuntimeException("exists with number children != 2");
 
-        return "( " + getExists(subFormulae.get(0)) + "( " + subFormulae.get(1) + " ) )";
+        return "( " + getExists(subFormulae.get(0)) + subFormulae.get(1) + " )";
     }
 
     private String inspectForAll(ForAll tree, ArrayList<String> subFormulae){
         if (subFormulae.size() != 2) throw new RuntimeException("for all with number children != 2");
 
-        return "( " + getForAll(subFormulae.get(0)) + "( " + subFormulae.get(1) + " ) )";
+        return "( " + getForAll(subFormulae.get(0)) + subFormulae.get(1) + " )";
     }
 
     private String inspectNegation(Negation tree, ArrayList<String> subFormula){
         if (subFormula.size() != 1) throw new RuntimeException("negation with number children != 1");
 
-        return "( " + getNegation() + subFormula.get(0) + " )";
+        return getNegation() + subFormula.get(0);
     }
 
     private String inspectLeq(LEQ tree, ArrayList<String> subFormulae){
@@ -110,7 +110,7 @@ public class TPTPWriter extends TreeVisitor {
     private String inspectLetterAtPos(LetterAtPos tree, ArrayList<String> subFormulae){
         if (subFormulae.size() != 1) throw new RuntimeException("LetterAtPos with arity != 1");
 
-        return getLetterAtPos(tree.associatedLetter, subFormulae.get(0));
+        return getLetterAtPos(tree.getAssociatedLetter(), subFormulae.get(0));
     }
 
     private String inspectTableau(Tableau tree, ArrayList<String> tuple){

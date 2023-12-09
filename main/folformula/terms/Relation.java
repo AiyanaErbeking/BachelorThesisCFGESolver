@@ -1,7 +1,6 @@
 package folformula.terms;
 
 import folformula.FOLFormula;
-import folformula.Variable;
 
 public abstract class Relation extends FOLFormula{
 
