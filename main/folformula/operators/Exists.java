@@ -1,4 +1,12 @@
 package folformula.operators;
 
-public class Exists {
+import folformula.FOLFormula;
+import folformula.Variable;
+
+public class Exists extends Quantifier {
+
+    public Exists(Variable boundVariable, FOLFormula quantifiedFormula) {
+        super(boundVariable, quantifiedFormula);
+    }
+
 }

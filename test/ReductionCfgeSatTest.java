@@ -49,7 +49,7 @@ public class ReductionCfgeSatTest {
 
         //System.out.println(reductionCfgeToFolSat.encodingWordStructure(C1, C2));
         //System.out.print(reductionCfgeToFolSat.subwordsLengthOne(C1.getVariables(), C1.getRules(), C1.getName()) + "\n");
-        System.out.println(reductionCfgeToFolSat.encodingGrammarInequivalence(C1, C2));
+        //System.out.println(reductionCfgeToFolSat.encodingGrammarInequivalence(C1, C2));
         //System.out.println(reductionCfgeToFolSat.subwordsGreaterOne(C1.variables, C1.rules, C1.name));
         //System.out.println(reductionCfgeToFolSat.encodingCYKTable(C1));
         //System.out.println(reductionCfgeToFolSat.reduce(C1, C2));

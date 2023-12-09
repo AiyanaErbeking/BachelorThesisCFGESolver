@@ -3,9 +3,9 @@ package folformula.operators;
 import folformula.FOLFormula;
 import folformula.Variable;
 
-public class ForAll extends Quantifier{
+public abstract class Quantifier extends FOLFormula {
 
-    public ForAll(Variable boundVariable, FOLFormula quantifiedFormula) {
+    public Quantifier(Variable boundVariable, FOLFormula quantifiedFormula){
         super(boundVariable, quantifiedFormula);
     }
 

@@ -1,7 +1,6 @@
 package folformula;
 
-import folformula.operators.Conjunction;
-import folformula.operators.Negation;
+import folformula.operators.*;
 
 import java.util.Iterator;
 import java.util.TreeSet;
@@ -119,6 +118,20 @@ public abstract class FOLFormula extends TreeSet<FOLFormula> implements Comparab
 
     public FOLFormula not(){ return new Negation(this); }
 
+    public FOLFormula or(FOLFormula... rightSubformulae){ return new Disjunction(this, rightSubformulae); }
 
+    public FOLFormula equivalent(FOLFormula rightSubformula){ return new Equivalence(this, rightSubformula); }
+
+    public FOLFormula exists(FOLFormula subformula){
+        assert this.getClass() == Variable.class : "trying to quantify something that is not a Variable!";
+        return new Exists((Variable) this, subformula);
+    }
+
+    public FOLFormula forall(FOLFormula subformula){
+        assert this.getClass() == Variable.class : "trying to quantify something that is not a Variable!";
+        return new ForAll((Variable) this, subformula);
+    }
+
+    public FOLFormula implies(FOLFormula rightSubformula){ return new Implication(this, rightSubformula); }
 
 }

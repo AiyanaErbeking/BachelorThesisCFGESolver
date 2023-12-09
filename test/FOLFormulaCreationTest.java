@@ -10,6 +10,9 @@ public class FOLFormulaCreationTest {
     @Test
     public void FOLFormulaConstructionTest(){
         FOLFormula simple = X.and(Y).and(X);
+
+        FOLFormula existsStatement = X.exists(Y.exists(X.or(Y)));
+
     }
 
 }
