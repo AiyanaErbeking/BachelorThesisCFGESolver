@@ -4,6 +4,8 @@ import folformula.operators.*;
 import folformula.terms.Variable;
 import folformula.tree.Tree;
 
+import java.util.ArrayList;
+
 public abstract class FOLFormula extends Tree {
 
     /**
@@ -28,6 +30,12 @@ public abstract class FOLFormula extends Tree {
             addChild(rightSubformula);
         }
         this.name = null;
+    }
+
+    public FOLFormula(ArrayList<FOLFormula> subFormulae){
+        for (FOLFormula sub : subFormulae){
+            addChild(sub);
+        }
     }
 
     public FOLFormula and(FOLFormula... rightSubformulae){ return new Conjunction(this, rightSubformulae); }

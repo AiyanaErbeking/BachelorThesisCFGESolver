@@ -1,5 +1,10 @@
 package cfg;
 
+import folformula.FOLFormula;
+import folformula.operators.Conjunction;
+import folformula.operators.ForAll;
+import folformula.terms.LetterAtPos;
+import folformula.terms.Variable;
 import folformula.writers.TPTPWriter;
 
 import java.util.*;
@@ -13,7 +18,12 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
     /**
      * sub-formula: every position of the searched-for word contains exactly one letter
      * */
-    protected String encodingWordStructure(ContextfreeGrammar C1, ContextfreeGrammar C2){
+    protected FOLFormula encodingWordStructure(ContextfreeGrammar C1, ContextfreeGrammar C2){
+
+        FOLFormula forAllSubFormula;
+        FOLFormula disjunctionSubFormula;
+        FOLFormula conjunctionSubFormula;
+        Variable X = new Variable("X");
 
         Set<String> alphabetC1 = C1.getAlphabet();
 
@@ -25,23 +35,34 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
         if (alphabet.isEmpty()) throw new IllegalStateException("both CFG alphabets are empty!");
 
-        String folFormula = "( ";
-        folFormula += getForAll("X") + "( ";
+        forAllSubFormula = new ForAll(X, disjunctionSubFormula);
+
 
         for (String sigma : alphabet){
             if (!Objects.equals(alphabet.get(0), sigma)){
                 folFormula += getOr();
             }
 
-            folFormula += "( " + getLetterAtPos(sigma, "X");
+            LetterAtPos letterAtPos = new LetterAtPos(X);
+            letterAtPos.setAssociatedLetter(sigma);
 
             List<String> alphabetWithoutSigma = new ArrayList<>(alphabet);
             alphabetWithoutSigma.remove(sigma);
 
+            ArrayList<FOLFormula> conjLettersAtPos = new ArrayList<>();
+
+            conjLettersAtPos.add(letterAtPos);
+
             for (String letterNotSigma : alphabetWithoutSigma) {
-                folFormula += getAnd() + getNegation() + getLetterAtPos(letterNotSigma, "X");
+
+                LetterAtPos letterNotSigmaAtPos = new LetterAtPos(X);
+                letterNotSigmaAtPos.setAssociatedLetter(letterNotSigma);
+
+                conjLettersAtPos.add(letterNotSigmaAtPos.not());
             }
-            folFormula += " )";
+
+            Conjunction lettersAtPos = new Conjunction(conjLettersAtPos);
+
             alphabetWithoutSigma.add(sigma);
         }
         folFormula += " )";
