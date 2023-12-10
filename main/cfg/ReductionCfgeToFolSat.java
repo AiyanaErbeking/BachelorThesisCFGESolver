@@ -2,6 +2,7 @@ package cfg;
 
 import folformula.FOLFormula;
 import folformula.operators.Conjunction;
+import folformula.operators.Disjunction;
 import folformula.operators.ForAll;
 import folformula.terms.LetterAtPos;
 import folformula.terms.Variable;
@@ -18,11 +19,9 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
     /**
      * sub-formula: every position of the searched-for word contains exactly one letter
      * */
-    protected FOLFormula encodingWordStructure(ContextfreeGrammar C1, ContextfreeGrammar C2){
+    public FOLFormula encodingWordStructure(ContextfreeGrammar C1, ContextfreeGrammar C2){
 
         FOLFormula forAllSubFormula;
-        FOLFormula disjunctionSubFormula;
-        FOLFormula conjunctionSubFormula;
         Variable X = new Variable("X");
 
         Set<String> alphabetC1 = C1.getAlphabet();
@@ -35,13 +34,10 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
         if (alphabet.isEmpty()) throw new IllegalStateException("both CFG alphabets are empty!");
 
-        forAllSubFormula = new ForAll(X, disjunctionSubFormula);
+        ArrayList<FOLFormula> disjOfConj = new ArrayList<>();
 
 
         for (String sigma : alphabet){
-            if (!Objects.equals(alphabet.get(0), sigma)){
-                folFormula += getOr();
-            }
 
             LetterAtPos letterAtPos = new LetterAtPos(X);
             letterAtPos.setAssociatedLetter(sigma);
@@ -63,10 +59,16 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
             Conjunction lettersAtPos = new Conjunction(conjLettersAtPos);
 
+            disjOfConj.add(lettersAtPos);
+
             alphabetWithoutSigma.add(sigma);
         }
-        folFormula += " )";
-        return folFormula + " )";
+
+        Disjunction disjOfConjunctions = new Disjunction(disjOfConj);
+
+        forAllSubFormula = new ForAll(X, disjOfConjunctions);
+
+        return forAllSubFormula;
     }
 
     /**

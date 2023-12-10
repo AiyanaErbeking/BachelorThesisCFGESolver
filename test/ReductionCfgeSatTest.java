@@ -16,8 +16,8 @@ public class ReductionCfgeSatTest {
     public void  testEncodingWordStructure(){
 
         Set<String> alph = new HashSet<>();
-        alph.add("a");
-        //alph.add("b");
+        //alph.add("a");
+        alph.add("b");
         //alph.add("c");
         C1.setAlphabet(alph);
         C2.setAlphabet(alph);
@@ -47,7 +47,7 @@ public class ReductionCfgeSatTest {
         C1.setStartVariables(startVars);
         C2.setStartVariables(startVars);
 
-        //System.out.println(reductionCfgeToFolSat.encodingWordStructure(C1, C2));
+        System.out.println(reductionCfgeToFolSat.encodingWordStructure(C1, C2).writeToTPTP());
         //System.out.print(reductionCfgeToFolSat.subwordsLengthOne(C1.getVariables(), C1.getRules(), C1.getName()) + "\n");
         //System.out.println(reductionCfgeToFolSat.encodingGrammarInequivalence(C1, C2));
         //System.out.println(reductionCfgeToFolSat.subwordsGreaterOne(C1.variables, C1.rules, C1.name));

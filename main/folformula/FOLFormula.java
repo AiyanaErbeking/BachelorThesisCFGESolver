@@ -3,6 +3,7 @@ package folformula;
 import folformula.operators.*;
 import folformula.terms.Variable;
 import folformula.tree.Tree;
+import folformula.writers.TPTPWriter;
 
 import java.util.ArrayList;
 
@@ -57,5 +58,11 @@ public abstract class FOLFormula extends Tree {
     }
 
     public FOLFormula implies(FOLFormula rightSubformula){ return new Implication(this, rightSubformula); }
+
+
+    public String writeToTPTP(){
+        TPTPWriter tptpWriter = new TPTPWriter();
+        return tptpWriter.visitChildrenRecursively(this);
+    }
 
 }
