@@ -1,10 +1,10 @@
 package cfg;
 
 import folformula.FOLFormula;
-import folformula.operators.Conjunction;
-import folformula.operators.Disjunction;
-import folformula.operators.ForAll;
+import folformula.operators.*;
+import folformula.terms.LEQ;
 import folformula.terms.LetterAtPos;
+import folformula.terms.Tableau;
 import folformula.terms.Variable;
 import folformula.writers.TPTPWriter;
 
@@ -12,8 +12,16 @@ import java.util.*;
 
 public class ReductionCfgeToFolSat extends TPTPWriter {
 
-    public String reduce(ContextfreeGrammar C1, ContextfreeGrammar C2){
-        return "(" + encodingWordStructure(C1, C2) + getAnd() + encodingCYKTable(C1) + getAnd() + encodingCYKTable(C2) + getAnd() + encodingGrammarInequivalence(C1, C2) + ")";
+    public FOLFormula reduce(ContextfreeGrammar C1, ContextfreeGrammar C2){
+
+        ArrayList<FOLFormula> allSubformulae = new ArrayList<>();
+
+        allSubformulae.add(encodingWordStructure(C1, C2));
+        allSubformulae.add(encodingCYKTable(C1));
+        allSubformulae.add(encodingCYKTable(C2));
+        allSubformulae.add(encodingGrammarInequivalence(C1, C2));
+
+        return new Conjunction(allSubformulae);
     }
 
     /**
@@ -74,18 +82,27 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
     /**
      * sub-formula: representing the CYK Table
      * */
-    protected String encodingCYKTable(ContextfreeGrammar CFG){
+    public FOLFormula encodingCYKTable(ContextfreeGrammar CFG){
+
         Set<String> variables = CFG.getVariables();
         Set<String> rules = CFG.getRules();
         String name = CFG.getName();
 
-        return "(" + getForAll("X") + getForAll("Y") + "(" + subwordsLengthOne(variables, rules, name) + getAnd() + subwordsGreaterOne(variables, rules, name) + ") )";
+        Variable X = new Variable("X");
+        Variable Y = new Variable("Y");
+
+        ForAll forALlY = new ForAll(Y, subwordsLengthOne(variables, rules, name).and(subwordsGreaterOne(variables, rules, name)));
+
+        return new ForAll(X, forALlY);
     }
 
     /**
      * sub-formula: CYK Table entries where sub-word has length 1 ie. V =>* w iff V -> sigma
      * */
-    public String subwordsLengthOne(Set<String> variables, Set<String> rules, String name){
+    public FOLFormula subwordsLengthOne(Set<String> variables, Set<String> rules, String grammarName){
+
+        Variable X = new Variable("X");
+        Variable Y = new Variable("Y");
 
         if (variables.isEmpty()) throw new IllegalStateException("CFG variables is empty!");
         if (rules.isEmpty()) throw new IllegalStateException("CFG rules is empty!");
@@ -93,9 +110,9 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
         List<String> vars = new ArrayList<>(variables);
         List<String> productions = new ArrayList<>(rules);
 
-        // if position X == position Y
-        String folFormula = "( ( leq(X, Y)" + getAnd() + "leq(Y, X)" + " )" + getImplication() + "( ";
+        ArrayList<FOLFormula> conjunctionList = new ArrayList<>();
 
+        //a set of grammar variables which have terminal rules (map directly to a letter)
         Set<String> varWithTerminalRule = new HashSet<>();
         for (String var : vars){
             for (String rule : productions) {
@@ -107,14 +124,14 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
             }
         }
 
+        //conversion of set to indexable data structure
         List<String> varsWithTerminalRule = new ArrayList<>(varWithTerminalRule);
 
         for (String var : varsWithTerminalRule){
-            if (!Objects.equals(varsWithTerminalRule.get(0), var)){
-                folFormula += getAnd();
-            }
 
-            folFormula += "( " + getTableau(name, var, "X", "Y") + getEquivalence();
+            Tableau varTableau = new Tableau(X, Y);
+            varTableau.setAssociatedGrammarName(grammarName);
+            varTableau.setAssociatedVariable(var);
 
             List<String> terminalProductionsFromVar = new ArrayList<>();
             for (String rule : productions){
@@ -125,30 +142,36 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
                 }
             }
 
-            folFormula += "( ";
+            ArrayList<FOLFormula> disjunctionList = new ArrayList<>();
 
             for (String rule : terminalProductionsFromVar){
-                if (!Objects.equals(terminalProductionsFromVar.get(0), rule)){
-                    folFormula += getOr();
-                }
-                folFormula += getLetterAtPos(rule.substring(1, 2), "X");
+
+                LetterAtPos letterFromTerminalProductionsOfVar = new LetterAtPos(X);
+                letterFromTerminalProductionsOfVar.setAssociatedLetter(rule.substring(1, 2));
+
+                disjunctionList.add(letterFromTerminalProductionsOfVar);
             }
 
-            folFormula += " ) )";
+            conjunctionList.add(new Equivalence(varTableau, new Disjunction(disjunctionList)));
 
+            // in preparation for the next loop iterating over terminal production rules of a new grammar var
             terminalProductionsFromVar.clear();
+
 
         }
 
-        folFormula += " ) )";
+        // position X == position Y ie. X <= Y AND Y <= X
+        LEQ xLEQy = new LEQ(X, Y);
+        LEQ yLEQx = new LEQ(Y, X);
+        Conjunction xEQUALSy = new Conjunction(xLEQy, yLEQx);
 
-        return folFormula;
+        return new Implication(xEQUALSy, new Conjunction(conjunctionList));
     }
 
     /**
      * sub-formula: CYK Table entries where sub-word has length > 1 ie. V =>* w iff V -> AB
      * */
-    public String subwordsGreaterOne(Set<String> variables, Set<String> rules, String name){
+    public FOLFormula subwordsGreaterOne(Set<String> variables, Set<String> rules, String name){
 
         if (variables.isEmpty()) throw new IllegalStateException("CFG variables is empty!");
         if (rules.isEmpty()) throw new IllegalStateException("CFG rules is empty!");
@@ -213,7 +236,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
     /**
      * sub-formula: w is generated by C1 iff it is not generated by C2
      * */
-    protected String encodingGrammarInequivalence(ContextfreeGrammar C1, ContextfreeGrammar C2){
+    public FOLFormula encodingGrammarInequivalence(ContextfreeGrammar C1, ContextfreeGrammar C2){
         return "( " + wordIsGenerated(C1.getStartVariables(), C1.getName()) + getEquivalence() + getNegation() + wordIsGenerated(C2.getStartVariables(), C2.getName()) + " )";
     }
 
@@ -222,7 +245,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
      * ie. there exist position X, Y where X is the smallest and Y the greatest position in w,
      * and an S in CFG: S =>* w[X, Y]
      * */
-    private String wordIsGenerated(Set<String> startVariables, String name){
+    public FOLFormula wordIsGenerated(Set<String> startVariables, String name){
 
         String positionX = "X";
         String positionY = "Y";

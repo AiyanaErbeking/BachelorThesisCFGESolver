@@ -13,4 +13,20 @@ public class Tableau extends Relation{
         super(var1, var2);
     }
 
+
+    public String getAssociatedGrammarName() {
+        return associatedGrammarName;
+    }
+
+    public void setAssociatedGrammarName(String associatedGrammarName) {
+        this.associatedGrammarName = associatedGrammarName;
+    }
+
+    public String getAssociatedVariable() {
+        return associatedVariable;
+    }
+
+    public void setAssociatedVariable(String associatedVariable) {
+        this.associatedVariable = associatedVariable;
+    }
 }
