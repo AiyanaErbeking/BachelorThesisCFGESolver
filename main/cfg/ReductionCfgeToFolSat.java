@@ -171,7 +171,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
     /**
      * sub-formula: CYK Table entries where sub-word has length > 1 ie. V =>* w iff V -> AB
      * */
-    public FOLFormula subwordsGreaterOne(Set<String> variables, Set<String> rules, String name){
+    public FOLFormula subwordsGreaterOne(Set<String> variables, Set<String> rules, String grammarName){
 
         if (variables.isEmpty()) throw new IllegalStateException("CFG variables is empty!");
         if (rules.isEmpty()) throw new IllegalStateException("CFG rules is empty!");
@@ -179,12 +179,26 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
         List<String> vars = new ArrayList<>(variables);
         List<String> productions = new ArrayList<>(rules);
 
-        String positionX = "X";
-        String positionY = "Y";
-        String positionK = "K";
+        Variable X = new Variable("X");
+        Variable Y = new Variable("Y");
+        Variable K = new Variable("K");
 
-        // if position X < position Y
-        String folFormula = "( " + getLessThan(positionX, positionY) + getImplication();
+        // the position k: X <= K < Y
+        LEQ xLEQk = new LEQ(X, K);
+        Conjunction kSMALERky = new Conjunction(new LEQ(K, Y), new Negation(new LEQ(Y, K)));
+
+        // there exists a position k+1 which is exactly one position greater than k (there does not exist another position in between k and k+1)
+        Variable KPLUSONE = new Variable("KPLUSONE");
+        Variable INBETWEEN = new Variable("INBETWEEN");
+
+        Conjunction kSMALERkplusone = new Conjunction(new LEQ(K, KPLUSONE), new Negation(new LEQ(KPLUSONE, K)));
+        Conjunction inbetweenSMALERkplusone = new Conjunction(new LEQ(INBETWEEN, KPLUSONE), new Negation(new LEQ(KPLUSONE, INBETWEEN)));
+        Negation inbetweenNOTEQUALk = new Negation(new Conjunction(new LEQ(INBETWEEN, K), new LEQ(K, INBETWEEN)));
+        Negation nOTinbetweenSMALLERk = new Negation(new Conjunction(new LEQ(INBETWEEN, K), new Negation(new LEQ(K, INBETWEEN))));
+        Exists eXISTSinbetween = new Exists(INBETWEEN, new Conjunction(inbetweenSMALERkplusone, inbetweenNOTEQUALk, nOTinbetweenSMALLERk));
+
+
+
 
         Set<String> varWithNonTerminalRules = new HashSet<>();
         for (String var : vars){
@@ -199,14 +213,15 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
         List<String> varsWithNonTerminalRules = new ArrayList<>(varWithNonTerminalRules);
 
+        // conjunction over all grammar vars with non-terminal production rules
+        ArrayList<FOLFormula> conjunctionList = new ArrayList<>();
+
         for (String var : varsWithNonTerminalRules) {
-                if (!Objects.equals(varsWithNonTerminalRules.get(0), var)) {
-                    folFormula += getAnd();
-                }
 
-                folFormula += "( " + getTableau(name, var, positionX, positionY) + getEquivalence();
+            Tableau xyTableau = new Tableau(X, Y);
+            xyTableau.setAssociatedVariable(var);
+            xyTableau.setAssociatedGrammarName(grammarName);
 
-                folFormula += getExists(positionK) + "(" + getLeq(positionX, positionK) + getAnd() + getLessThan(positionK, positionY) + getAnd();
 
                 List<String> nonTerminalProductionsFromVar = new ArrayList<>();
                 for (String rule : productions) {
@@ -217,20 +232,39 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
                     }
                 }
 
-                folFormula += "( ";
+
+                ArrayList<FOLFormula> disjunctionList = new ArrayList<>();
 
                 for (String rule : nonTerminalProductionsFromVar) {
-                    if (!Objects.equals(nonTerminalProductionsFromVar.get(0), rule)) {
-                        folFormula += getOr();
-                    }
-                    folFormula += "( " + getTableau(name, rule.substring(1, 2), positionX, positionK) + getAnd() + positionPlusOne(positionK) + getAnd() + getTableau(name, rule.substring(2, 3), "KPlusOne", positionY) + " ) )";
+
+                    Tableau xkTableau = new Tableau(X, K);
+                    xkTableau.setAssociatedGrammarName(grammarName);
+                    xkTableau.setAssociatedVariable(rule.substring(1, 2));
+
+                    Tableau kplusoneyTableau = new Tableau(KPLUSONE, Y);
+                    kplusoneyTableau.setAssociatedVariable(rule.substring(2, 3));
+                    kplusoneyTableau.setAssociatedGrammarName(grammarName);
+
+                    // the first var from the non-term rule produces Tableau(X, K) and the second var from the rule produces Tableau(KPLUSONE, Y)
+                    disjunctionList.add(new Conjunction(xkTableau, new Exists(KPLUSONE, new Conjunction(kSMALERkplusone, new Negation(eXISTSinbetween), kplusoneyTableau))));
                 }
 
-                folFormula += " ) )";
+                Disjunction disjOverNonTerminalRules = new Disjunction(disjunctionList);
+
+                // there exists a position k:
+                Exists existsK = new Exists(K, new Conjunction(xLEQk, kSMALERky, disjOverNonTerminalRules));
+
+                conjunctionList.add(new Equivalence(xyTableau, existsK));
 
                 nonTerminalProductionsFromVar.clear();
             }
-        return folFormula;
+
+        // position X < position Y
+        LEQ xLEQy = new LEQ(X, Y);
+        Negation nOTyLEQx = new Negation(new LEQ(Y, X));
+        Conjunction xSMALLERy = new Conjunction(xLEQy, nOTyLEQx);
+
+        return new Implication(xSMALLERy, new Conjunction(conjunctionList));
     }
 
     /**
