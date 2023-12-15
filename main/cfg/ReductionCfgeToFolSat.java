@@ -139,6 +139,10 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
         //a set of grammar variables which have terminal rules (map directly to a letter)
         Set<String> varWithTerminalRule = new HashSet<>();
+
+        //a set of grammar vars having non terminal rules
+        Set<String> varWithoutTerminalRule = new HashSet<>();
+
         for (String var : vars){
             for (String rule : productions) {
                 if (rule.length() == 2) {
@@ -146,14 +150,17 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
                         varWithTerminalRule.add(var);
                     }
                 }
+                else if (rule.length() == 3){
+                    if (Objects.equals(rule.substring(0, 1), var)) {
+                        varWithoutTerminalRule.add(var);
+                    }
+                }
             }
         }
 
         //conversion of set to indexable data structure
         List<String> varsWithTerminalRule = new ArrayList<>(varWithTerminalRule);
-
-        // if there are no grammar variables with terminal production rules, this subformula is empty
-        if (varsWithTerminalRule.isEmpty()) return null;
+        List<String> varsWOTerminalRule = new ArrayList<>(varWithoutTerminalRule);
 
 
         for (String var : varsWithTerminalRule){
@@ -186,15 +193,17 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
             // in preparation for the next loop iterating over terminal production rules of a new grammar var
             terminalProductionsFromVar.clear();
 
-
         }
 
-        // position X == position Y ie. X <= Y AND Y <= X
-        LEQ xLEQy = new LEQ(X, Y);
-        LEQ yLEQx = new LEQ(Y, X);
-        Conjunction xEQUALSy = new Conjunction(xLEQy, yLEQx);
+        for (String var : varsWOTerminalRule){
 
-        return new Implication(xEQUALSy, new Conjunction(conjunctionList));
+            Tableau varTableau = new Tableau(X, Y);
+            varTableau.setAssociatedGrammarName(grammarName);
+            varTableau.setAssociatedVariable(var);
+        }
+
+
+        return new Implication(new Equals(X, Y), new Conjunction(conjunctionList));
     }
 
     /**

@@ -14,12 +14,16 @@ public abstract class FOLFormula extends Tree {
      * */
     public String name;
 
+    // for top and bottom:
+    public FOLFormula(){}
 
+    // for variables:
     public FOLFormula(String name){
         super();
         this.name = name;
     }
 
+    // for unary operators:
     public FOLFormula(FOLFormula subFormula){
         addChild(subFormula);
         this.name = null;
