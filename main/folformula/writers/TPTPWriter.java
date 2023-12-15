@@ -1,12 +1,9 @@
 package folformula.writers;
 
+import folformula.terms.*;
 import folformula.tree.Tree;
 import folformula.tree.TreeVisitor;
-import folformula.terms.Variable;
 import folformula.operators.*;
-import folformula.terms.LEQ;
-import folformula.terms.LetterAtPos;
-import folformula.terms.Tableau;
 
 import java.util.ArrayList;
 
@@ -29,18 +26,18 @@ public class TPTPWriter extends TreeVisitor {
 
     protected String getLeq(String X, String Y){ return " leq(" + X + ", " + Y + ")"; }
 
-    protected String getEquals(String X, String Y){ return getLeq(X, Y) + getAnd() + getLeq(Y, X); }
+    protected String getEquals(String X, String Y){ return X + "=" + Y; }
 
-    protected String getNotEquals(String X, String Y){ return getNegation() + "( " + getEquals(X, Y) + " )"; }
+    protected String getNotEquals(String X, String Y){ return X + "!=" + Y; }
 
     protected String getLessThan(String X, String Y){ return getLeq(X, Y) + getAnd() + getNegation() + "( " + getLeq(Y, X) + " )"; }
 
     protected String getLetterAtPos(String letter, String position){ return "letter_is_" + letter + "(" + position + ")";}
 
-    protected String getTableau(String name, String var, String positionX, String positionY){
+    protected String getTableau(String grammarName, String grammarVar, String positionX, String positionY){
         // predicates can't contain capital letters as these are reserved for variables
-        String lowercaseVar = var.toLowerCase();
-        return name + "_tableau_" + lowercaseVar + "(" + positionX + ", " + positionY + ")";
+        String lowercaseVar = grammarVar.toLowerCase();
+        return grammarName + "_tableau_" + lowercaseVar + "(" + positionX + ", " + positionY + ")";
     }
 
     protected String positionPlusOne(String position){ return getExists(position + "PlusOne") + "( " + getLessThan(position, position + "PlusOne") + getAnd() + getNegation() + getExists("M") + "( " + getLessThan("M", position + "PlusOne") + getAnd() + getNotEquals("M", position) + getAnd() + getNegation() + "(" + getLessThan("M", position) + ") )"; }
@@ -86,13 +83,13 @@ public class TPTPWriter extends TreeVisitor {
     private String inspectExists(Exists tree, ArrayList<String> subFormulae){
         if (subFormulae.size() != 2) throw new RuntimeException("exists with number children != 2");
 
-        return "( " + getExists(subFormulae.get(0)) + subFormulae.get(1) + " )";
+        return getExists(subFormulae.get(0)) + subFormulae.get(1);
     }
 
     private String inspectForAll(ForAll tree, ArrayList<String> subFormulae){
         if (subFormulae.size() != 2) throw new RuntimeException("for all with number children != 2");
 
-        return "( " + getForAll(subFormulae.get(0)) + subFormulae.get(1) + " )";
+        return getForAll(subFormulae.get(0)) + subFormulae.get(1);
     }
 
     private String inspectNegation(Negation tree, ArrayList<String> subFormula){
@@ -105,6 +102,12 @@ public class TPTPWriter extends TreeVisitor {
         if (subFormulae.size() != 2) throw new RuntimeException("leq with arity != 2");
 
         return getLeq(subFormulae.get(0), subFormulae.get(1));
+    }
+
+    private String inspectEquals(Equals tree, ArrayList<String> subFormulae){
+        if (subFormulae.size() != 2) throw new RuntimeException("equals with arity != 2");
+
+        return getEquals(subFormulae.get(0), subFormulae.get(1));
     }
 
     private String inspectLetterAtPos(LetterAtPos tree, ArrayList<String> subFormulae){

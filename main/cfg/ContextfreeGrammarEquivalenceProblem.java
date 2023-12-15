@@ -1,6 +1,7 @@
 package cfg;
 
 import cfg.ContextfreeGrammar;
+import folformula.FOLFormula;
 
 public class ContextfreeGrammarEquivalenceProblem {
 
@@ -37,7 +38,7 @@ public class ContextfreeGrammarEquivalenceProblem {
 
     private ReductionCfgeToFolSat reductionCfgeToFolSat;
 
-    public String reduceToFolSat(){
+    public FOLFormula reduceToFolSat(){
         return reductionCfgeToFolSat.reduce(C1, C2);
     }
 }

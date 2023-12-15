@@ -2,10 +2,7 @@ package cfg;
 
 import folformula.FOLFormula;
 import folformula.operators.*;
-import folformula.terms.LEQ;
-import folformula.terms.LetterAtPos;
-import folformula.terms.Tableau;
-import folformula.terms.Variable;
+import folformula.terms.*;
 import folformula.writers.TPTPWriter;
 
 import java.util.*;
@@ -16,6 +13,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
         ArrayList<FOLFormula> allSubformulae = new ArrayList<>();
 
+        allSubformulae.add(encodingLEQ());
         allSubformulae.add(encodingWordStructure(C1, C2));
         allSubformulae.add(encodingCYKTable(C1));
         allSubformulae.add(encodingCYKTable(C2));
@@ -23,6 +21,26 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
         return new Conjunction(allSubformulae);
     }
+
+
+    /**
+     * establishing leq() as a total-order, antisymmetric equivalence relation
+     * */
+    private FOLFormula encodingLEQ(){
+
+        Variable X = new Variable("X");
+        Variable Y = new Variable("Y");
+        Variable Z = new Variable("Z");
+
+        FOLFormula totalOrder = new ForAll(X, new ForAll(Y, new Disjunction(new LEQ(X, Y), new LEQ(Y, X))));
+
+        FOLFormula reflectiveAndAntisymm = new ForAll(X, new ForAll(Y, new Equivalence(new Equals(X, Y), new Conjunction(new LEQ(X, Y), new LEQ(Y, X)))));
+
+        FOLFormula transitive = new ForAll(X, new ForAll(Y, new ForAll(Z, new Implication(new Conjunction(new LEQ(X, Y), new LEQ(Y, X)), new LEQ(X, Z)))));
+
+        return new Conjunction(totalOrder, reflectiveAndAntisymm, transitive);
+    }
+
 
     /**
      * sub-formula: every position of the searched-for word contains exactly one letter
@@ -86,14 +104,21 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
         Set<String> variables = CFG.getVariables();
         Set<String> rules = CFG.getRules();
-        String name = CFG.getName();
+        String grammarName = CFG.getName();
 
         Variable X = new Variable("X");
         Variable Y = new Variable("Y");
 
-        ForAll forALlY = new ForAll(Y, subwordsLengthOne(variables, rules, name).and(subwordsGreaterOne(variables, rules, name)));
+        FOLFormula existTerminalRules = subwordsLengthOne(variables, rules, grammarName);
+        FOLFormula existNonTerminalRules = subwordsGreaterOne(variables, rules, grammarName);
 
-        return new ForAll(X, forALlY);
+        // if one of the two subformulae is null, then no conjunction...
+        if (existTerminalRules == null) return new ForAll(X, new ForAll(Y, existNonTerminalRules));
+
+        if (existNonTerminalRules == null) return new ForAll(X, new ForAll(Y, existTerminalRules));
+
+        // because we throw an exception if the grammar var set is empty, it cannot be that both subformulae are null, so here both must be != null:
+        return new ForAll(X, new ForAll(Y, subwordsLengthOne(variables, rules, grammarName).and(subwordsGreaterOne(variables, rules, grammarName))));
     }
 
     /**
@@ -126,6 +151,10 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
         //conversion of set to indexable data structure
         List<String> varsWithTerminalRule = new ArrayList<>(varWithTerminalRule);
+
+        // if there are no grammar variables with terminal production rules, this subformula is empty
+        if (varsWithTerminalRule.isEmpty()) return null;
+
 
         for (String var : varsWithTerminalRule){
 
@@ -176,8 +205,27 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
         if (variables.isEmpty()) throw new IllegalStateException("CFG variables is empty!");
         if (rules.isEmpty()) throw new IllegalStateException("CFG rules is empty!");
 
+
         List<String> vars = new ArrayList<>(variables);
         List<String> productions = new ArrayList<>(rules);
+
+        Set<String> varWithNonTerminalRules = new HashSet<>();
+        for (String var : vars){
+            for (String rule : productions) {
+                if (rule.length() == 3) {
+                    if (Objects.equals(rule.substring(0, 1), var)) {
+                        varWithNonTerminalRules.add(var);
+                    }
+                }
+            }
+        }
+
+        List<String> varsWithNonTerminalRules = new ArrayList<>(varWithNonTerminalRules);
+
+        // if there are no grammar variables with non-terminal production rules, this subformula is empty
+        if (varsWithNonTerminalRules.isEmpty()) return null;
+
+
 
         Variable X = new Variable("X");
         Variable Y = new Variable("Y");
@@ -197,21 +245,6 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
         Negation nOTinbetweenSMALLERk = new Negation(new Conjunction(new LEQ(INBETWEEN, K), new Negation(new LEQ(K, INBETWEEN))));
         Exists eXISTSinbetween = new Exists(INBETWEEN, new Conjunction(inbetweenSMALERkplusone, inbetweenNOTEQUALk, nOTinbetweenSMALLERk));
 
-
-
-
-        Set<String> varWithNonTerminalRules = new HashSet<>();
-        for (String var : vars){
-            for (String rule : productions) {
-                if (rule.length() == 3) {
-                    if (Objects.equals(rule.substring(0, 1), var)) {
-                        varWithNonTerminalRules.add(var);
-                    }
-                }
-            }
-        }
-
-        List<String> varsWithNonTerminalRules = new ArrayList<>(varWithNonTerminalRules);
 
         // conjunction over all grammar vars with non-terminal production rules
         ArrayList<FOLFormula> conjunctionList = new ArrayList<>();
@@ -271,7 +304,19 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
      * sub-formula: w is generated by C1 iff it is not generated by C2
      * */
     public FOLFormula encodingGrammarInequivalence(ContextfreeGrammar C1, ContextfreeGrammar C2){
-        return "( " + wordIsGenerated(C1.getStartVariables(), C1.getName()) + getEquivalence() + getNegation() + wordIsGenerated(C2.getStartVariables(), C2.getName()) + " )";
+
+        Variable X = new Variable("X");
+        Variable Y = new Variable("Y");
+        Variable K = new Variable("K");
+        Variable L = new Variable("L");
+
+        // there does NOT exist a position K which is smaller than X
+        Negation notExistKsmallerX = new Negation(new Exists(K, new Conjunction(new LEQ(K, X), new Negation(new LEQ(X, K)))));
+
+        // there does NOT exist a position L which is greater than Y
+        Negation notExistLgreaterY = new Negation(new Exists(L, new Conjunction(new LEQ(Y, L), new Negation(new LEQ(L, Y)))));
+
+        return new Exists(X, new Exists(Y, new Conjunction(notExistKsmallerX, notExistLgreaterY, new Equivalence(wordIsGenerated(C1.getStartVariables(), C1.getName()), new Negation(wordIsGenerated(C2.getStartVariables(), C2.getName()))))));
     }
 
     /**
@@ -279,40 +324,28 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
      * ie. there exist position X, Y where X is the smallest and Y the greatest position in w,
      * and an S in CFG: S =>* w[X, Y]
      * */
-    public FOLFormula wordIsGenerated(Set<String> startVariables, String name){
+    public FOLFormula wordIsGenerated(Set<String> cfgOneStartVariables, String cfgOneName){
 
-        String positionX = "X";
-        String positionY = "Y";
-        String positionK = "K";
-        String positionL = "L";
+        Variable X = new Variable("X");
+        Variable Y = new Variable("Y");
 
-        if (startVariables.isEmpty()) throw new IllegalStateException("CFG has no start variables!");
+        if (cfgOneStartVariables.isEmpty()) throw new IllegalStateException("CFG has no start variables!");
 
-        // there exist positions X, Y
-        String folFormula = "( " + getExists("X") + getExists("Y");
+        List<String> startVars = new ArrayList<>(cfgOneStartVariables);
 
-        // there does NOT exist a position K which is smaller than X
-        folFormula += "( " + getNegation() + getExists("K") + "( leq(K, X)" + getAnd() + getNegation() + "leq(X, K) )";
+        ArrayList<FOLFormula> disjunctionList  = new ArrayList<>();
 
-        // there does NOT exist a position L which is greater than Y
-        folFormula += getAnd() + getNegation() + getExists("L") + "( leq(Y, L)" + getAnd() + getNegation() + "leq(L, Y) )";
-
-        folFormula += getAnd() + "( ";
-
-        List<String> startVars = new ArrayList<>(startVariables);
-
-        // and
+        // at least one Tableau entry from a Start var generates the subword w[X, Y]
         for (String start : startVars){
-            if (!Objects.equals(startVars.get(0), start)){
-                folFormula += getOr();
-            }
 
-            folFormula += getTableau(name, start, positionX, positionY);
+            Tableau sgenwTableau = new Tableau(X, Y);
+            sgenwTableau.setAssociatedGrammarName(cfgOneName);
+            sgenwTableau.setAssociatedVariable(start);
+
+            disjunctionList.add(sgenwTableau);
         }
 
-        folFormula += " ) ) )";
-
-        return folFormula;
+        return new Disjunction(disjunctionList);
     }
 
 }

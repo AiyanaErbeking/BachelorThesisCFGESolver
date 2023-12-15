@@ -62,7 +62,10 @@ public abstract class FOLFormula extends Tree {
 
     public String writeToTPTP(){
         TPTPWriter tptpWriter = new TPTPWriter();
-        return tptpWriter.visitChildrenRecursively(this);
+
+        String tptpString = "fof(cfge, negated_conjecture, ";
+
+        return tptpString + tptpWriter.visitChildrenRecursively(this) + " ).";
     }
 
 }
