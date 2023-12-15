@@ -1,6 +1,10 @@
+package cfg;
+
 import java.util.Set;
 
 public class ContextfreeGrammar {
+
+    protected String name;
 
     protected Set<String> variables;
 
@@ -9,6 +13,10 @@ public class ContextfreeGrammar {
     protected Set<String> rules;
 
     protected Set<String> startVariables;
+
+    public ContextfreeGrammar(String description){
+        name = description;
+    }
 
     ///////////
     // getters
@@ -28,6 +36,10 @@ public class ContextfreeGrammar {
 
     public Set<String> getVariables() {
         return variables;
+    }
+
+    public String getName() {
+        return name;
     }
 
     ///////////

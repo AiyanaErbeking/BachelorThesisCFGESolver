@@ -1,12 +1,17 @@
+package cfg;
+
+import cfg.ContextfreeGrammar;
+import folformula.FOLFormula;
+
 public class ContextfreeGrammarEquivalenceProblem {
 
-    public ContextfreeGrammar CFG1;
+    public ContextfreeGrammar C1;
 
-    public ContextfreeGrammar CFG2;
+    public ContextfreeGrammar C2;
 
-    public ContextfreeGrammarEquivalenceProblem(ContextfreeGrammar C1, ContextfreeGrammar C2){
-        CFG1 = C1;
-        CFG2 = C2;
+    public ContextfreeGrammarEquivalenceProblem(ContextfreeGrammar CFG1, ContextfreeGrammar CFG2){
+        C1 = CFG1;
+        C2 = CFG2;
     }
 
     //////////////////////////////
@@ -33,7 +38,7 @@ public class ContextfreeGrammarEquivalenceProblem {
 
     private ReductionCfgeToFolSat reductionCfgeToFolSat;
 
-    public String reduceToFolSat(){
-        return reductionCfgeToFolSat.cfgeToFolSat(CFG1, CFG2);
+    public FOLFormula reduceToFolSat(){
+        return reductionCfgeToFolSat.reduce(C1, C2);
     }
 }
