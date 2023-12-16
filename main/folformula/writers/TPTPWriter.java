@@ -40,6 +40,8 @@ public class TPTPWriter extends TreeVisitor {
         return grammarName + "_tableau_" + lowercaseVar + "(" + positionX + ", " + positionY + ")";
     }
 
+    protected String getBottom(){ return "$false"; }
+
     protected String positionPlusOne(String position){ return getExists(position + "PlusOne") + "( " + getLessThan(position, position + "PlusOne") + getAnd() + getNegation() + getExists("M") + "( " + getLessThan("M", position + "PlusOne") + getAnd() + getNotEquals("M", position) + getAnd() + getNegation() + "(" + getLessThan("M", position) + ") )"; }
 
 
@@ -107,7 +109,7 @@ public class TPTPWriter extends TreeVisitor {
     private String inspectEquals(Equals tree, ArrayList<String> subFormulae){
         if (subFormulae.size() != 2) throw new RuntimeException("equals with arity != 2");
 
-        return getEquals(subFormulae.get(0), subFormulae.get(1));
+        return "( " + getEquals(subFormulae.get(0), subFormulae.get(1)) + " )";
     }
 
     private String inspectLetterAtPos(LetterAtPos tree, ArrayList<String> subFormulae){
@@ -127,6 +129,12 @@ public class TPTPWriter extends TreeVisitor {
         assert subFormulae.isEmpty() : "Variable has non-empty list of subformulae...";
 
         return tree.name;
+    }
+
+    private String inspectBottom(Bottom tree, ArrayList<String> subFormulae){
+        assert subFormulae.isEmpty() : "Bottom shouldn't have any children";
+
+        return getBottom();
     }
 
     @Override
@@ -153,6 +161,10 @@ public class TPTPWriter extends TreeVisitor {
             return inspectLetterAtPos((LetterAtPos) currentTree, subFormulae);
         if (currentTree instanceof Tableau)
             return inspectTableau((Tableau) currentTree, subFormulae);
+        if (currentTree instanceof Bottom)
+            return inspectBottom((Bottom) currentTree, subFormulae);
+        if (currentTree instanceof Equals)
+            return inspectEquals((Equals) currentTree, subFormulae);
 
         throw new RuntimeException("current formula has no known type");
     }

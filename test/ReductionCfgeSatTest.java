@@ -17,28 +17,28 @@ public class ReductionCfgeSatTest {
 
         Set<String> alph = new HashSet<>();
         alph.add("a");
-        //alph.add("b");
-        //alph.add("c");
+        alph.add("b");
+        alph.add("c");
         C1.setAlphabet(alph);
         C2.setAlphabet(alph);
 
         Set<String> rulesc1 = new HashSet<>();
         rulesc1.add("Sa");
-        //rules.add("SSS");
+        rulesc1.add("SSS");
         //rules.add("Xb");
         //rules.add("Xc");
         //rules.add("AXY");
 
         Set<String> rulesc2 = new HashSet<>();
-        rulesc2.add("Xa");
-
+        //rulesc2.add("Xa");
+        rulesc2.add("Sa");
 
         C1.setRules(rulesc1);
         C2.setRules(rulesc2);
 
         Set<String> variables = new HashSet<>();
         variables.add("S");
-        variables.add("X");
+        //variables.add("X");
         //variables.add("A");
         //variables.add("Y");
 

@@ -36,7 +36,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
         FOLFormula reflectiveAndAntisymm = new ForAll(X, new ForAll(Y, new Equivalence(new Equals(X, Y), new Conjunction(new LEQ(X, Y), new LEQ(Y, X)))));
 
-        FOLFormula transitive = new ForAll(X, new ForAll(Y, new ForAll(Z, new Implication(new Conjunction(new LEQ(X, Y), new LEQ(Y, X)), new LEQ(X, Z)))));
+        FOLFormula transitive = new ForAll(X, new ForAll(Y, new ForAll(Z, new Implication(new Conjunction(new LEQ(X, Y), new LEQ(Y, Z)), new LEQ(X, Z)))));
 
         return new Conjunction(totalOrder, reflectiveAndAntisymm, transitive);
     }
@@ -140,9 +140,6 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
         //a set of grammar variables which have terminal rules (map directly to a letter)
         Set<String> varWithTerminalRule = new HashSet<>();
 
-        //a set of grammar vars having non terminal rules
-        Set<String> varWithoutTerminalRule = new HashSet<>();
-
         for (String var : vars){
             for (String rule : productions) {
                 if (rule.length() == 2) {
@@ -150,18 +147,16 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
                         varWithTerminalRule.add(var);
                     }
                 }
-                else if (rule.length() == 3){
-                    if (Objects.equals(rule.substring(0, 1), var)) {
-                        varWithoutTerminalRule.add(var);
-                    }
-                }
             }
         }
+
+        //a set of grammar vars having non terminal rules
+        Set<String> varWithoutTerminalRule = new HashSet<>(variables);
+        varWithoutTerminalRule.removeAll(varWithTerminalRule);
 
         //conversion of set to indexable data structure
         List<String> varsWithTerminalRule = new ArrayList<>(varWithTerminalRule);
         List<String> varsWOTerminalRule = new ArrayList<>(varWithoutTerminalRule);
-
 
         for (String var : varsWithTerminalRule){
 
@@ -195,16 +190,22 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
         }
 
+        ArrayList<FOLFormula> conjOverNonTerminalVars = new ArrayList<>();
+
         for (String var : varsWOTerminalRule){
 
             Tableau varTableau = new Tableau(X, Y);
             varTableau.setAssociatedGrammarName(grammarName);
             varTableau.setAssociatedVariable(var);
+
+            conjOverNonTerminalVars.add(new Equivalence(varTableau, new Bottom()));
         }
 
+        conjunctionList.addAll(conjOverNonTerminalVars);
 
         return new Implication(new Equals(X, Y), new Conjunction(conjunctionList));
     }
+
 
     /**
      * sub-formula: CYK Table entries where sub-word has length > 1 ie. V =>* w iff V -> AB
@@ -214,6 +215,9 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
         if (variables.isEmpty()) throw new IllegalStateException("CFG variables is empty!");
         if (rules.isEmpty()) throw new IllegalStateException("CFG rules is empty!");
 
+        Variable X = new Variable("X");
+        Variable Y = new Variable("Y");
+        Variable K = new Variable("K");
 
         List<String> vars = new ArrayList<>(variables);
         List<String> productions = new ArrayList<>(rules);
@@ -229,29 +233,33 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
             }
         }
 
+        Set<String> varsWONonTerminalRules = new HashSet<>(variables);
+        varsWONonTerminalRules.removeAll(varWithNonTerminalRules);
+
         List<String> varsWithNonTerminalRules = new ArrayList<>(varWithNonTerminalRules);
+        List<String> varsWOnonTerminalRules = new ArrayList<>(varsWONonTerminalRules);
 
-        // if there are no grammar variables with non-terminal production rules, this subformula is empty
-        if (varsWithNonTerminalRules.isEmpty()) return null;
-
-
-
-        Variable X = new Variable("X");
-        Variable Y = new Variable("Y");
-        Variable K = new Variable("K");
 
         // the position k: X <= K < Y
         LEQ xLEQk = new LEQ(X, K);
-        Conjunction kSMALERky = new Conjunction(new LEQ(K, Y), new Negation(new LEQ(Y, K)));
+        Conjunction kSMALERy = new Conjunction(new LEQ(K, Y), new Negation(new Equals(K, Y)));
 
         // there exists a position k+1 which is exactly one position greater than k (there does not exist another position in between k and k+1)
         Variable KPLUSONE = new Variable("KPLUSONE");
         Variable INBETWEEN = new Variable("INBETWEEN");
 
-        Conjunction kSMALERkplusone = new Conjunction(new LEQ(K, KPLUSONE), new Negation(new LEQ(KPLUSONE, K)));
-        Conjunction inbetweenSMALERkplusone = new Conjunction(new LEQ(INBETWEEN, KPLUSONE), new Negation(new LEQ(KPLUSONE, INBETWEEN)));
-        Negation inbetweenNOTEQUALk = new Negation(new Conjunction(new LEQ(INBETWEEN, K), new LEQ(K, INBETWEEN)));
-        Negation nOTinbetweenSMALLERk = new Negation(new Conjunction(new LEQ(INBETWEEN, K), new Negation(new LEQ(K, INBETWEEN))));
+        // K < KPLUSONE :=  K <= KPLUSONE  &  K != KPLUSONE
+        Conjunction kSMALERkplusone = new Conjunction(new LEQ(K, KPLUSONE), new Negation(new Equals(K, KPLUSONE)));
+
+        // INBETWEEN <= KPLUSONE  &  INBETWEEN != KPLUSONE
+        Conjunction inbetweenSMALERkplusone = new Conjunction(new LEQ(INBETWEEN, KPLUSONE), new Negation(new Equals(INBETWEEN, KPLUSONE)));
+
+        // INBETWEEN != K
+        Negation inbetweenNOTEQUALk = new Negation(new Equals(INBETWEEN, K));
+
+        // NOT INBETWEEN < K
+        Negation nOTinbetweenSMALLERk = new Negation(new Conjunction(new LEQ(INBETWEEN, K), new Negation(new Equals(INBETWEEN, K))));
+
         Exists eXISTSinbetween = new Exists(INBETWEEN, new Conjunction(inbetweenSMALERkplusone, inbetweenNOTEQUALk, nOTinbetweenSMALLERk));
 
 
@@ -294,20 +302,33 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
                 Disjunction disjOverNonTerminalRules = new Disjunction(disjunctionList);
 
                 // there exists a position k:
-                Exists existsK = new Exists(K, new Conjunction(xLEQk, kSMALERky, disjOverNonTerminalRules));
+                Exists existsK = new Exists(K, new Conjunction(xLEQk, kSMALERy, disjOverNonTerminalRules));
 
                 conjunctionList.add(new Equivalence(xyTableau, existsK));
 
                 nonTerminalProductionsFromVar.clear();
             }
 
+        ArrayList<FOLFormula> conjOverNonTermVars = new ArrayList<>();
+
+        for (String var : varsWOnonTerminalRules){
+
+            Tableau varsWOTableau = new Tableau(X, Y);
+            varsWOTableau.setAssociatedVariable(var);
+            varsWOTableau.setAssociatedGrammarName(grammarName);
+
+            conjOverNonTermVars.add(new Equivalence(varsWOTableau, new Bottom()));
+
+        }
+
+        conjunctionList.addAll(conjOverNonTermVars);
+
         // position X < position Y
-        LEQ xLEQy = new LEQ(X, Y);
-        Negation nOTyLEQx = new Negation(new LEQ(Y, X));
-        Conjunction xSMALLERy = new Conjunction(xLEQy, nOTyLEQx);
+        Conjunction xSMALLERy = new Conjunction(new LEQ(X, Y), new Negation(new Equals(X, Y)));
 
         return new Implication(xSMALLERy, new Conjunction(conjunctionList));
     }
+
 
     /**
      * sub-formula: w is generated by C1 iff it is not generated by C2
@@ -327,6 +348,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
         return new Exists(X, new Exists(Y, new Conjunction(notExistKsmallerX, notExistLgreaterY, new Equivalence(wordIsGenerated(C1.getStartVariables(), C1.getName()), new Negation(wordIsGenerated(C2.getStartVariables(), C2.getName()))))));
     }
+
 
     /**
      * sub-formula: w is generated by CFG
