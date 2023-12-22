@@ -2,7 +2,7 @@ package cfg;
 
 import java.util.Set;
 
-public class ContextfreeGrammar {
+public class ContextFreeGrammar {
 
     private final String name;
 
@@ -15,7 +15,7 @@ public class ContextfreeGrammar {
     private final Set<String> startVariables;
 
 
-    public ContextfreeGrammar(String name, Set<String> variables, Set<String> alphabet, Set<String> rules, Set<String> startVariables){
+    public ContextFreeGrammar(String name, Set<String> variables, Set<String> alphabet, Set<String> rules, Set<String> startVariables){
 
         this.name = name;
         this.variables = variables;
@@ -24,8 +24,6 @@ public class ContextfreeGrammar {
         this.startVariables = startVariables;
 
     }
-
-
 
     ///////////
     // getters
@@ -48,5 +46,11 @@ public class ContextfreeGrammar {
     }
 
     public String getName() { return name; }
+
+
+    public ContextFreeGrammar parse(String cfgString){
+
+        return CFGParser.parseGrammarString(cfgString);
+    }
 
 }

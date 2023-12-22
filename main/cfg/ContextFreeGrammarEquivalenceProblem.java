@@ -1,15 +1,14 @@
 package cfg;
 
-import cfg.ContextfreeGrammar;
 import folformula.FOLFormula;
 
-public class ContextfreeGrammarEquivalenceProblem {
+public class ContextFreeGrammarEquivalenceProblem {
 
-    public ContextfreeGrammar C1;
+    public ContextFreeGrammar C1;
 
-    public ContextfreeGrammar C2;
+    public ContextFreeGrammar C2;
 
-    public ContextfreeGrammarEquivalenceProblem(ContextfreeGrammar CFG1, ContextfreeGrammar CFG2){
+    public ContextFreeGrammarEquivalenceProblem(ContextFreeGrammar CFG1, ContextFreeGrammar CFG2){
         C1 = CFG1;
         C2 = CFG2;
     }

@@ -1,4 +1,5 @@
-import cfg.ContextfreeGrammar;
+import cfg.CFGParser;
+import cfg.ContextFreeGrammar;
 import cfg.ReductionCfgeToFolSat;
 import  org.junit.Test;
 import vampirehandling.VampireHandler;
@@ -55,8 +56,8 @@ public class ReductionCfgeSatTest {
         c2start.add("Y");
 
 
-        ContextfreeGrammar C1 = new ContextfreeGrammar("c_one", c1vars, alphabet, c1rules, c1start);
-        ContextfreeGrammar C2 = new ContextfreeGrammar("c_two", c1vars, alphabet, c1rules, c1start);
+        ContextFreeGrammar C1 = new ContextFreeGrammar("c_one", c1vars, alphabet, c1rules, c1start);
+        ContextFreeGrammar C2 = new ContextFreeGrammar("c_two", c1vars, alphabet, c1rules, c1start);
 
 
 
@@ -69,7 +70,15 @@ public class ReductionCfgeSatTest {
 
         VampireHandler vampireHandler = new VampireHandler();
 
-        vampireHandler.runVampire("20", Boolean.TRUE);
+        //vampireHandler.runVampire("20", Boolean.TRUE);
+
+
+        String grammarString = "S -> a S b | A | B | ?\n" +
+                    "A -> a A a | C\n" +
+                    "B -> b B b | C\n" +
+                    "C -> b C a | ?";
+
+        CFGParser.parseGrammarString(grammarString).getAlphabet();
     }
 
 }
