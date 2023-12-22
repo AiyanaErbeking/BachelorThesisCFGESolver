@@ -127,7 +127,7 @@ public class VampireHandler {
                             result = "UNKNOWN";
                         }
 
-                        System.out.println(getTimestamp() + "Output: " + result + " written to: " + outputFile.getFileName().toString() + "\n");
+                        System.out.println(getTimestamp() + "Output " + result + " written to: " + outputFile.getFileName().toString() + "\n");
                     }
                     return FileVisitResult.CONTINUE;
                 }
