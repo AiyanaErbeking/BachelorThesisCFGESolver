@@ -41,4 +41,6 @@ public class ContextfreeGrammarEquivalenceProblem {
     public FOLFormula reduceToFolSat(){
         return reductionCfgeToFolSat.reduce(C1, C2);
     }
+
+    public String reduceToTPTPFolSat(){ return reduceToFolSat().writeToTPTP(); }
 }

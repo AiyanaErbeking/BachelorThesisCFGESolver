@@ -28,10 +28,6 @@ public class TPTPWriter extends TreeVisitor {
 
     protected String getEquals(String X, String Y){ return X + "=" + Y; }
 
-    protected String getNotEquals(String X, String Y){ return X + "!=" + Y; }
-
-    protected String getLessThan(String X, String Y){ return getLeq(X, Y) + getAnd() + getNegation() + "( " + getLeq(Y, X) + " )"; }
-
     protected String getLetterAtPos(String letter, String position){ return "letter_is_" + letter + "(" + position + ")";}
 
     protected String getTableau(String grammarName, String grammarVar, String positionX, String positionY){
@@ -42,11 +38,8 @@ public class TPTPWriter extends TreeVisitor {
 
     protected String getBottom(){ return "$false"; }
 
-    protected String positionPlusOne(String position){ return getExists(position + "PlusOne") + "( " + getLessThan(position, position + "PlusOne") + getAnd() + getNegation() + getExists("M") + "( " + getLessThan("M", position + "PlusOne") + getAnd() + getNotEquals("M", position) + getAnd() + getNegation() + "(" + getLessThan("M", position) + ") )"; }
 
-
-
-    private String inspectAnd(Conjunction tree, ArrayList<String> subFormulae){
+    private String checkOutAnd(Conjunction tree, ArrayList<String> subFormulae){
 
         String conjunction = "";
 
@@ -58,7 +51,7 @@ public class TPTPWriter extends TreeVisitor {
         return "( " + conjunction + " )";
     }
 
-    private String inspectOr(Disjunction tree, ArrayList<String> subFormulae){
+    private String checkOutOr(Disjunction tree, ArrayList<String> subFormulae){
 
         String disjunction = "";
 
@@ -70,101 +63,101 @@ public class TPTPWriter extends TreeVisitor {
         return "( " + disjunction + " )";
     }
 
-    private String inspectEquivalence(Equivalence tree, ArrayList<String> subFormulae){
+    private String checkOutEquivalence(Equivalence tree, ArrayList<String> subFormulae){
         if (subFormulae.size() != 2) throw new RuntimeException("equivalence with number subFormulae != 2");
 
         return "( " + subFormulae.get(0) + getEquivalence() + subFormulae.get(1) + " )";
     }
 
-    private String inspectImplication(Implication tree, ArrayList<String> subFormulae){
+    private String checkOutImplication(Implication tree, ArrayList<String> subFormulae){
         if (subFormulae.size() != 2) throw new RuntimeException("implication with number subFormulae != 2");
 
         return "( " + subFormulae.get(0) + getImplication() + subFormulae.get(1) + " )";
     }
 
-    private String inspectExists(Exists tree, ArrayList<String> subFormulae){
+    private String checkOutExists(Exists tree, ArrayList<String> subFormulae){
         if (subFormulae.size() != 2) throw new RuntimeException("exists with number children != 2");
 
         return getExists(subFormulae.get(0)) + subFormulae.get(1);
     }
 
-    private String inspectForAll(ForAll tree, ArrayList<String> subFormulae){
+    private String checkOutForAll(ForAll tree, ArrayList<String> subFormulae){
         if (subFormulae.size() != 2) throw new RuntimeException("for all with number children != 2");
 
         return getForAll(subFormulae.get(0)) + subFormulae.get(1);
     }
 
-    private String inspectNegation(Negation tree, ArrayList<String> subFormula){
+    private String checkOutNegation(Negation tree, ArrayList<String> subFormula){
         if (subFormula.size() != 1) throw new RuntimeException("negation with number children != 1");
 
         return getNegation() + subFormula.get(0);
     }
 
-    private String inspectLeq(LEQ tree, ArrayList<String> subFormulae){
+    private String checkOutLeq(LEQ tree, ArrayList<String> subFormulae){
         if (subFormulae.size() != 2) throw new RuntimeException("leq with arity != 2");
 
         return getLeq(subFormulae.get(0), subFormulae.get(1));
     }
 
-    private String inspectEquals(Equals tree, ArrayList<String> subFormulae){
+    private String checkOutEquals(Equals tree, ArrayList<String> subFormulae){
         if (subFormulae.size() != 2) throw new RuntimeException("equals with arity != 2");
 
         return "( " + getEquals(subFormulae.get(0), subFormulae.get(1)) + " )";
     }
 
-    private String inspectLetterAtPos(LetterAtPos tree, ArrayList<String> subFormulae){
+    private String checkOutLetterAtPos(LetterAtPos tree, ArrayList<String> subFormulae){
         if (subFormulae.size() != 1) throw new RuntimeException("LetterAtPos with arity != 1");
 
         return getLetterAtPos(tree.getAssociatedLetter(), subFormulae.get(0));
     }
 
-    private String inspectTableau(Tableau tree, ArrayList<String> tuple){
+    private String checkOutTableau(Tableau tree, ArrayList<String> tuple){
         if (tuple.size() != 2) throw new RuntimeException("Tableau with arity != 2");
 
         return getTableau(tree.associatedGrammarName, tree.associatedVariable, tuple.get(0), tuple.get(1));
     }
 
-    private String inspectVariable(Variable tree, ArrayList<String> subFormulae){
+    private String checkOutVariable(Variable tree, ArrayList<String> subFormulae){
 
         assert subFormulae.isEmpty() : "Variable has non-empty list of subformulae...";
 
-        return tree.name;
+        return tree.getName();
     }
 
-    private String inspectBottom(Bottom tree, ArrayList<String> subFormulae){
+    private String checkOutBottom(Bottom tree, ArrayList<String> subFormulae){
         assert subFormulae.isEmpty() : "Bottom shouldn't have any children";
 
         return getBottom();
     }
 
     @Override
-    public String inspect(Tree currentTree, ArrayList<String> subFormulae){
+    public String checkOut(Tree currentTree, ArrayList<String> subFormulae){
         if (currentTree instanceof Conjunction)
-            return inspectAnd((Conjunction) currentTree, subFormulae);
+            return checkOutAnd((Conjunction) currentTree, subFormulae);
         if (currentTree instanceof Variable)
-            return inspectVariable((Variable) currentTree, subFormulae);
+            return checkOutVariable((Variable) currentTree, subFormulae);
         if (currentTree instanceof Disjunction)
-            return inspectOr((Disjunction) currentTree, subFormulae);
+            return checkOutOr((Disjunction) currentTree, subFormulae);
         if (currentTree instanceof Equivalence)
-            return inspectEquivalence((Equivalence) currentTree, subFormulae);
+            return checkOutEquivalence((Equivalence) currentTree, subFormulae);
         if (currentTree instanceof Exists)
-            return inspectExists((Exists) currentTree, subFormulae);
+            return checkOutExists((Exists) currentTree, subFormulae);
         if (currentTree instanceof ForAll)
-            return inspectForAll((ForAll) currentTree, subFormulae);
+            return checkOutForAll((ForAll) currentTree, subFormulae);
         if (currentTree instanceof Implication)
-            return inspectImplication((Implication) currentTree, subFormulae);
+            return checkOutImplication((Implication) currentTree, subFormulae);
         if (currentTree instanceof Negation)
-            return inspectNegation((Negation) currentTree, subFormulae);
+            return checkOutNegation((Negation) currentTree, subFormulae);
         if (currentTree instanceof LEQ)
-            return inspectLeq((LEQ) currentTree, subFormulae);
+            return checkOutLeq((LEQ) currentTree, subFormulae);
         if (currentTree instanceof LetterAtPos)
-            return inspectLetterAtPos((LetterAtPos) currentTree, subFormulae);
+            return checkOutLetterAtPos((LetterAtPos) currentTree, subFormulae);
         if (currentTree instanceof Tableau)
-            return inspectTableau((Tableau) currentTree, subFormulae);
+            return checkOutTableau((Tableau) currentTree, subFormulae);
         if (currentTree instanceof Bottom)
-            return inspectBottom((Bottom) currentTree, subFormulae);
+            return checkOutBottom((Bottom) currentTree, subFormulae);
         if (currentTree instanceof Equals)
-            return inspectEquals((Equals) currentTree, subFormulae);
+            return checkOutEquals((Equals) currentTree, subFormulae);
 
         throw new RuntimeException("current formula has no known type");
     }

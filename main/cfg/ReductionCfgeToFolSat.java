@@ -80,7 +80,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
                 LetterAtPos letterNotSigmaAtPos = new LetterAtPos(X);
                 letterNotSigmaAtPos.setAssociatedLetter(letterNotSigma);
 
-                conjLettersAtPos.add(letterNotSigmaAtPos.not());
+                conjLettersAtPos.add(new Negation(letterNotSigmaAtPos));
             }
 
             Conjunction lettersAtPos = new Conjunction(conjLettersAtPos);
@@ -118,7 +118,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
         if (existNonTerminalRules == null) return new ForAll(X, new ForAll(Y, existTerminalRules));
 
         // because we throw an exception if the grammar var set is empty, it cannot be that both subformulae are null, so here both must be != null:
-        return new ForAll(X, new ForAll(Y, subwordsLengthOne(variables, rules, grammarName).and(subwordsGreaterOne(variables, rules, grammarName))));
+        return new ForAll(X, new ForAll(Y, new Conjunction(subwordsLengthOne(variables, rules, grammarName), subwordsGreaterOne(variables, rules, grammarName))));
     }
 
     /**

@@ -16,9 +16,12 @@ public abstract class TreeVisitor {
             subFormulae.add(visitChildrenRecursively(child));
         }
 
-        return inspect(currentTree, subFormulae);
+        return checkOut(currentTree, subFormulae);
     }
 
-    public abstract String inspect(Tree currentTree, ArrayList<String> subFormulae);
+    /**
+     * this method is to be overridden; what should be done at each node, given a string list of its subFormulae
+     * */
+    public abstract String checkOut(Tree currentTree, ArrayList<String> subFormulae);
 
 }

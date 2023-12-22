@@ -4,19 +4,28 @@ import java.util.Set;
 
 public class ContextfreeGrammar {
 
-    protected String name;
+    private final String name;
 
-    protected Set<String> variables;
+    private final Set<String> variables;
 
-    protected Set<String> alphabet;
+    private final Set<String> alphabet;
 
-    protected Set<String> rules;
+    private final Set<String> rules;
 
-    protected Set<String> startVariables;
+    private final Set<String> startVariables;
 
-    public ContextfreeGrammar(String description){
-        name = description;
+
+    public ContextfreeGrammar(String name, Set<String> variables, Set<String> alphabet, Set<String> rules, Set<String> startVariables){
+
+        this.name = name;
+        this.variables = variables;
+        this.alphabet = alphabet;
+        this.rules = rules;
+        this.startVariables = startVariables;
+
     }
+
+
 
     ///////////
     // getters
@@ -38,27 +47,6 @@ public class ContextfreeGrammar {
         return variables;
     }
 
-    public String getName() {
-        return name;
-    }
+    public String getName() { return name; }
 
-    ///////////
-    // setters
-    //////////
-
-    public void setAlphabet(Set<String> alphabet) {
-        this.alphabet = alphabet;
-    }
-
-    public void setRules(Set<String> rules) {
-        this.rules = rules;
-    }
-
-    public void setStartVariables(Set<String> startVariables) {
-        this.startVariables = startVariables;
-    }
-
-    public void setVariables(Set<String> variables) {
-        this.variables = variables;
-    }
 }

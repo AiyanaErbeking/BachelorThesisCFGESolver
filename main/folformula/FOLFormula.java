@@ -1,7 +1,5 @@
 package folformula;
 
-import folformula.operators.*;
-import folformula.terms.Variable;
 import folformula.tree.Tree;
 import folformula.writers.TPTPWriter;
 
@@ -12,7 +10,12 @@ public abstract class FOLFormula extends Tree {
     /**
      * the name of a FOL Formula is only != null if it is a Variable.
      * */
-    public String name;
+    private String name;
+
+
+    //////////////////
+    // CONSTRUCTORS
+    ////////////////
 
     // for top and bottom:
     public FOLFormula(){}
@@ -43,27 +46,20 @@ public abstract class FOLFormula extends Tree {
         }
     }
 
-    public FOLFormula and(FOLFormula... rightSubformulae){ return new Conjunction(this, rightSubformulae); }
-
-    public FOLFormula not(){ return new Negation(this); }
-
-    public FOLFormula or(FOLFormula... rightSubformulae){ return new Disjunction(this, rightSubformulae); }
-
-    public FOLFormula equivalent(FOLFormula rightSubformula){ return new Equivalence(this, rightSubformula); }
-
-    public FOLFormula exists(FOLFormula subformula){
-        assert this.getClass() == Variable.class : "trying to quantify something that is not a Variable!";
-        return new Exists((Variable) this, subformula);
-    }
-
-    public FOLFormula forall(FOLFormula subformula){
-        assert this.getClass() == Variable.class : "trying to quantify something that is not a Variable!";
-        return new ForAll((Variable) this, subformula);
-    }
-
-    public FOLFormula implies(FOLFormula rightSubformula){ return new Implication(this, rightSubformula); }
 
 
+
+    public String getName() { return name; }
+
+
+    /**
+     * @return a string which can directly be fed to Vampire as input (after first being written to a .p file).
+     *
+     * the "role" of the TPTP fof formula is negated_conjecture because Vampire assumes there to be a set of axioms;
+     * Vampire answers the question: does the given conjecture follow from the axioms. Hence, Vampire returns
+     * the satisfiability of the NEGATED conjecture (conjoined with axioms if given). This is avoided here by already
+     * negating the input conjecture.
+     * */
     public String writeToTPTP(){
         TPTPWriter tptpWriter = new TPTPWriter();
 
