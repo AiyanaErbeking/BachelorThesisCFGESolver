@@ -3,6 +3,8 @@ package vampirehandling;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
 
 public class VampireHandler {
@@ -25,6 +27,12 @@ public class VampireHandler {
     public String getLocalPathToOutputDirectory() { return localPathToOutputDirectory; }
     public String getLocalPathToVampire() { return localPathToVampire; }
 
+
+    private String getTimestamp() {
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd HH:mm:ss");
+        return "[" + now.format(formatter) + "] ";
+    }
 
 
     private String invokeVampire(Path inputFilePath, String timeLimitSeconds, Boolean modeCascSat) throws IOException {
@@ -60,10 +68,10 @@ public class VampireHandler {
 
             if (exitCode == 0) {
                 // Process completed successfully, return the output
-                return "successful solve. time limit: " + timeLimitSeconds + ", mode casc_sat: " + modeCascSat + "\n\n" + outputStringBuilder.toString();
+                return "successful solve. time limit: " + timeLimitSeconds + ", mode casc_sat: " + modeCascSat + "\n\n" + outputStringBuilder;
             } else {
                 // Process failed, return an error message or handle accordingly
-                return "Vampire failed to solve the problem. Exit code: " + exitCode + "\n\n" + outputStringBuilder.toString();
+                return "Vampire failed to solve the problem. Exit code: " + exitCode + "\n\n" + outputStringBuilder;
             }
         } catch (InterruptedException e) {
             // Handle the exception
@@ -101,7 +109,7 @@ public class VampireHandler {
                         fileNumber[0] +=1;
 
                         // Log progress
-                        System.out.println("Grindin' file " + fileNumber[0] + " of " + finalTotalFiles + ": " + file.getFileName());
+                        System.out.println(getTimestamp() + "Grindin' file " + fileNumber[0] + " of " + finalTotalFiles + ": " + file.getFileName());
 
                         // Invoke Vampire and get the output
                         String vampireOutput = invokeVampire(file, timeLimitSeconds, modeCascSat);
@@ -119,7 +127,7 @@ public class VampireHandler {
                             result = "UNKNOWN";
                         }
 
-                        System.out.println("Output: " + result + " written to: " + outputFile.getFileName().toString() + "\n");
+                        System.out.println(getTimestamp() + "Output: " + result + " written to: " + outputFile.getFileName().toString() + "\n");
                     }
                     return FileVisitResult.CONTINUE;
                 }
