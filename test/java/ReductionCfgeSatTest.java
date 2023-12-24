@@ -1,7 +1,7 @@
-import cfg.CFGParser;
 import cfg.ContextFreeGrammar;
 import cfg.ReductionCfgeToFolSat;
-import  org.junit.Test;
+import grammarhandling.SelectingCFGPairs;
+import org.junit.Test;
 import vampirehandling.VampireHandler;
 
 import java.util.HashSet;
@@ -78,7 +78,10 @@ public class ReductionCfgeSatTest {
                     "B -> b B b | C\n" +
                     "C -> b C a | ?";
 
-        CFGParser.parseGrammarString(grammarString).getAlphabet();
+        //CFGParser.parseGrammarString(grammarString).getAlphabet();
+
+        SelectingCFGPairs selectingCFGPairs = new SelectingCFGPairs();
+        selectingCFGPairs.readCSVFile();
     }
 
 }

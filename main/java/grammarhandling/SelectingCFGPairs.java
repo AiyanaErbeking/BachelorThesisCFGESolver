@@ -11,31 +11,66 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This class provides functionality for, given a single .txt file with many student-given grammars, selecting
- * grammars from those and writing these to separate .txt files with the correct-answer grammar.
+ * This class provides functionality for, given a single .csv file with many (think thousands) of student-given grammars,
+ * selecting an equally-distributed grammar-subset and writing these to separate .txt files with the solution grammar.
  *
- * <p>This class writes files with naming convention: question_frequency_result_number.txt, where:
+ * <p>This class writes files with naming convention: problemId_evaluation_number_frequency.txt, where:
  * <ul>
- *     <li>question is the name(number) of the Iltis question</li>
- *     <li>frequency value is taken from the csv file</li>
- *     <li>result is the Iltis-provided result (EQUIVALENT, NOT_EQUIVALENT, UNKNOWN)</li>
+ *     <li>problemId is the name(number) of the Iltis question</li>
+ *     <li>evaluation is the Iltis-provided result (EQUIVALENT, NOT_EQUIVALENT, UNKNOWN)</li>
  *     <li>number is unique for CFG's where question and result are the same</li>
+ *     <li>frequency value is taken from the csv file (the number of student grammars isomorphic to current grammar)</li>
  * </ul>
  * </p>
  */
 public class SelectingCFGPairs {
 
-    private String outputDirPath = "/home/dev/Vampire/TextCFGPairs/";
+    /**
+     * change this path to the directory to which all grammar-pair .txt files should be written
+     * */
+    private final String outputDirPath = "/home/dev/Vampire/TextCFGPairs/";
 
-    private String solutionGrammarOne =
-                      """
-                      S → aSb|L|R
-                      L → bLb|B
-                      R → aRa|B
-                      B → bBa|ε
-                      """;
+    /**
+     * this is the number of student grammars taken per key (problem ID, evaluation). Adjust this sample number as needed :)
+     * This number is a maximum not a guarantee; it might be the case that there are fewer grammars available for some key.
+     * */
+    private final int numMaxCFGSamples = 5;
 
-    public void csvFileProcessing(){
+
+    // THE SOLUTION GRAMMARS FOR EACH PROBLEM ID (1 ... 7) =============================================================
+    private final String solutionGrammarOne =
+                    "S → aSb|L|R\n" +
+                    "L → bLb|B\n" +
+                    "R → aRa|B\n" +
+                    "B → bBa|ε";
+
+    private final String solutionGrammarTwo =
+                    "S → XY\n" +
+                    "X → ε|aXb\n" +
+                    "Y → ε|bYa";
+
+    private final String solutionGrammarThree =
+                    "S → aTb\n" +
+                    "T → aTb|a|b";
+
+    private final String solutionGrammarFour =
+                    "S → AX|YC\n" +
+                    "X → bB|cC|bXc\n" +
+                    "Y → aA|bB|aYb\n" +
+                    "A → ε|aA\n" +
+                    "B → ε|bB\n" +
+                    "C → ε|cC";
+
+    private final String solutionGrammarFive = "S → ε|SS|(S)|[S]|{S}";
+
+    private final String solutionGrammarSix = "S -> ε | SS | a S a S b | b S a S a | a S b S a";
+
+    private final String solutionGrammarSeven = "S → ab|aSb";
+
+
+
+
+    public void readCSVFile(){
 
         String csvFilePath = "/home/dev/Vampire/iltis-cfg-attempts.csv";
 
@@ -53,18 +88,31 @@ public class SelectingCFGPairs {
                 String frequency = nextRecord[2];
                 String evaluation = nextRecord[3];
 
+                // Form a key for the current combination of problem id and evaluation
+                String key = problemId + "_" + evaluation;
+
                 // Increment the count for the current combination
-                int count = rowCounts.getOrDefault(problemId + evaluation, 0) + 1;
-                rowCounts.put(problemId + evaluation, count);
+                int count = rowCounts.getOrDefault(key, 0) + 1;
 
-                // Generate the file name
-                String fileName = outputDirPath + problemId + "_" + frequency + "_" + evaluation + "_" + count + ".txt";
+                //
+                if (count <= numMaxCFGSamples) {
+                    rowCounts.put(key, count);
 
-                // Write the input grammar to the file
-                try (FileWriter writer = new FileWriter(fileName)) {
-                    writer.write(inputGrammar);
-                } catch (IOException e) {
-                    e.printStackTrace();
+                    // Generate the unique file name
+                    String fileName = outputDirPath + problemId + "_" + evaluation + "_" + count + "_" + frequency + ".txt";
+
+                    // Write the input grammar to the file
+                    try (FileWriter writer = new FileWriter(fileName)) {
+
+                        // Write the associated solution grammar to file
+                        writeSolutionGrammar(writer, problemId);
+
+                        // Write the student grammar underneath
+                        writer.write("\n" + inputGrammar);
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         } catch (IOException e) {
@@ -73,5 +121,33 @@ public class SelectingCFGPairs {
             throw new RuntimeException(e);
         }
 
+    }
+
+    private void writeSolutionGrammar(FileWriter writer, String problemId) throws IOException {
+        switch (problemId) {
+            case "I1":
+                writer.write(solutionGrammarOne + "\n");
+                break;
+            case "I2":
+                writer.write(solutionGrammarTwo + "\n");
+                break;
+            case "I3":
+                writer.write(solutionGrammarThree + "\n");
+                break;
+            case "I4":
+                writer.write(solutionGrammarFour + "\n");
+                break;
+            case "I5":
+                writer.write(solutionGrammarFive + "\n");
+                break;
+            case "I6":
+                writer.write(solutionGrammarSix + "\n");
+                break;
+            case "I7":
+                writer.write(solutionGrammarSeven + "\n");
+                break;
+            default:
+                throw new RuntimeException("problem id of current grammar unknown");
+        }
     }
 }
