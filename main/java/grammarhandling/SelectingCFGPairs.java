@@ -4,6 +4,7 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvValidationException;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -25,10 +26,12 @@ import java.util.Map;
  */
 public class SelectingCFGPairs {
 
+    private final String outputDirName = "TextCFGPairs";
     /**
      * change this path to the directory to which all grammar-pair .txt files should be written
      * */
-    private final String outputDirPath = "/home/dev/Vampire/TextCFGPairs/";
+    private final String outputDirPath = "/home/dev/Vampire/" + outputDirName;
+
 
     /**
      * this is the number of student grammars taken per key (problem ID, evaluation). Adjust this sample number as needed :)
@@ -72,6 +75,10 @@ public class SelectingCFGPairs {
 
     public void readCSVFile(){
 
+        if (!isDirectoryEmpty(outputDirPath))
+            throw new RuntimeException("the given output directory: " + outputDirName + " is not empty!");
+
+
         String csvFilePath = "/home/dev/Vampire/iltis-cfg-attempts.csv";
 
         try (CSVReader csvReader = new CSVReaderBuilder(new FileReader(csvFilePath)).withSkipLines(1).build()) {
@@ -99,7 +106,7 @@ public class SelectingCFGPairs {
                     rowCounts.put(key, count);
 
                     // Generate the unique file name
-                    String fileName = outputDirPath + problemId + "_" + evaluation + "_" + count + "_" + frequency + ".txt";
+                    String fileName = outputDirPath + "/" + problemId + "_" + evaluation + "_" + count + "_" + frequency + ".txt";
 
                     // Write the input grammar to the file
                     try (FileWriter writer = new FileWriter(fileName)) {
@@ -121,6 +128,12 @@ public class SelectingCFGPairs {
             throw new RuntimeException(e);
         }
 
+    }
+
+    private static boolean isDirectoryEmpty(String directoryPath) {
+        File directory = new File(directoryPath);
+        File[] files = directory.listFiles();
+        return files == null || files.length == 0;
     }
 
     private void writeSolutionGrammar(FileWriter writer, String problemId) throws IOException {

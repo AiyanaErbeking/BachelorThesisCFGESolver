@@ -80,7 +80,12 @@ public class VampireHandler {
         }
     }
 
+
     public void runVampire(String timeLimitSeconds, Boolean modeCascSat){
+
+        if (!isDirectoryEmpty(localPathToOutputDirectory))
+            throw new RuntimeException("the given output directory: " + outputDirectoryName + " is not empty!");
+
 
         // Specify the directory path
         String pathToInputDirectory = getLocalPathToInputDirectory();
@@ -144,6 +149,13 @@ public class VampireHandler {
             e.printStackTrace();
         }
 
+    }
+
+
+    private static boolean isDirectoryEmpty(String directoryPath) {
+        File directory = new File(directoryPath);
+        File[] files = directory.listFiles();
+        return files == null || files.length == 0;
     }
 
 

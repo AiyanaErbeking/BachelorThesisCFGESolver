@@ -26,10 +26,6 @@ public class ContextFreeGrammarEquivalenceProblem {
     // one method which checks all the above cases
 
 
-    ///////////////////////////////////////////////
-    // Methods for converting to other normal forms
-    //////////////////////////////////////////////
-
 
     //////////////
     // Reductions
