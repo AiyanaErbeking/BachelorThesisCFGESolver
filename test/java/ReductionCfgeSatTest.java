@@ -1,4 +1,3 @@
-import cfg.CFGParser;
 import cfg.ContextFreeGrammar;
 import cfg.ReductionCfgeToFolSat;
 import org.junit.Test;
@@ -26,19 +25,15 @@ public class ReductionCfgeSatTest {
 
         // Adding rules for variable 'A'
         Set<List<String>> aRules = new HashSet<>();
-        aRules.add(Collections.singletonList("x"));
+        aRules.add(Collections.singletonList("b"));
         aRules.add(Arrays.asList("y", "A", "z"));
+        aRules.add(Collections.singletonList("ε"));
         rulesMap.put("A", aRules);
 
         // Creating an instance of ContextFreeGrammar
-        //ContextFreeGrammar grammar = new ContextFreeGrammar("ExampleGrammar", rulesMap);
+        ContextFreeGrammar grammar = new ContextFreeGrammar("ExampleGrammar", rulesMap);
 
-
-        String grammarString = "S -> a S b | A | B | ?\n" +
-                "A -> a A1 a | C\n" +
-                "B -> b B b | C\n" +
-                "C -> b } a | ?";
-        ContextFreeGrammar grammar = CFGParser.parseGrammarString(grammarString);
+        grammar.toChomskyNormalForm();
         System.out.println("Grammar Name: " + grammar.getName());
         System.out.println("Rules:");
         for (Map.Entry<String, Set<List<String>>> entry : grammar.getRules().entrySet()) {

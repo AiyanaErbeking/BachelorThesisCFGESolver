@@ -22,7 +22,7 @@ public class ContextFreeGrammar {
     private Boolean containsNonGeneratingVars = Boolean.TRUE;
 
 
-    public static String epsilon = "";
+    public static String epsilon = "ε";
 
 
 
@@ -244,7 +244,7 @@ public class ContextFreeGrammar {
 
 
     /**
-     * For rules of the form: A -> X_0 ... X_n-1 with n > 2, replace with the following new rules and new Vars A_i:
+     * For rules of the form: A -> X_1 ... X_n with n > 2, replace with the following new rules and new Vars A_i:
      * <ul>
      *   <li>A -> X_0 A_0</li>
      *   <li>A_0 -> X_1 A_1</li>
@@ -262,17 +262,18 @@ public class ContextFreeGrammar {
                 if (alternative.size() > 2) {
                     List<String> newVarNames = new ArrayList<>();
 
-                    for (int i = 1; i < (alternative.size()); i++) {
-                        String newVar = generateNewVar(var, i); // A1 ... An-1
+                    for (int i = 1; i < (alternative.size()-1); i++) {
+                        String newVar = generateNewVar(var, i, updatedRules); // A1 ... An-2
                         newVarNames.add(newVar);
                     }
 
                     updatedRules.get(var).add(Arrays.asList(alternative.get(0), newVarNames.get(0)));
 
                     for (int j = 0; j < alternative.size(); j++) {
-                        if ((j + 2) >= alternative.size()) {
+                        if ((j + 3) >= alternative.size()) {
                             updatedRules.computeIfAbsent(newVarNames.get(j), k -> new HashSet<>())
-                                    .add(Arrays.asList(alternative.get(j), alternative.get(j + 1)));
+                                    .add(Arrays.asList(alternative.get(j+1), alternative.get(j + 2)));
+                            break;
                         } else {
                             updatedRules.computeIfAbsent(newVarNames.get(j), k -> new HashSet<>())
                                     .add(Arrays.asList(alternative.get(j + 1), newVarNames.get(j + 1)));
@@ -297,18 +298,18 @@ public class ContextFreeGrammar {
         rules.putAll(updatedRules);
     }
 
-    private String generateNewVar(String currentVar, int i){
+    private String generateNewVar(String currentVar, int i, Map<String, Set<List<String>>> updatedRules){
 
         String newVar = currentVar + i;
 
-        if (!rules.containsKey(newVar)) {
+        if (!updatedRules.containsKey(newVar)) {
             return newVar;
         }
 
         // If the variable already exists, try appending a unique index
         for (int j = 1; j <= 100; j++) {
             String indexedVar = newVar + j;
-            if (!rules.containsKey(indexedVar)) {
+            if (!updatedRules.containsKey(indexedVar)) {
                 return indexedVar;
             }
         }
@@ -322,11 +323,106 @@ public class ContextFreeGrammar {
      * generated from this var, or this var has an alternative with ONLY nullable vars.
      *
      * for every alternative containing at least one nullable var, and for every nullable var in this alternative,
-     * duplicate this alternative but remove an occurrence of the nullable var.
+     * duplicate this alternative but remove an occurrence of the nullable var from the duplicate.
      * */
-    public void removeEpsilonRules(){
+    public void removeEpsilonRules() {
+        // Step 1: Find the set of nullable vars
+        Set<String> nullableVars = findNullableVars();
 
+        // Step 2: Iterate through each rule and create new rules with nullable vars replaced by ε
+        for (String var : getVariables()) {
+            Set<List<String>> varAlternatives = new HashSet<>(rules.get(var));
+            Set<List<String>> updatedAlternatives = new HashSet<>(varAlternatives);
+
+            for (List<String> alternative : varAlternatives) {
+
+                // Replace nullable vars with ε
+                for (String nullableVar : nullableVars) {
+
+                    List<String> altsWithoutNullable = new ArrayList<>();
+
+                    for (int i = 0; i < alternative.size(); i++) {
+
+                        if (alternative.get(i).equals(nullableVar)) {
+
+                            for (int j = 0; j < alternative.size(); j++){
+                                if (j==i) continue;
+                                altsWithoutNullable.add(alternative.get(j));
+                            }
+                            if (altsWithoutNullable.isEmpty()) altsWithoutNullable.add(epsilon);
+
+                            updatedAlternatives.add(altsWithoutNullable);
+                            }
+                        }
+
+                    }
+                }
+            // Update the original set with the modified alternatives
+            rules.put(var, updatedAlternatives);
+        }
+        removeRulesMappingToEpsilon();
     }
+    // Helper method to remove all epsilon rules not from a start variable
+    private void removeRulesMappingToEpsilon() {
+        // Iterate over all variables
+        for (String var : new HashSet<>(getVariables())) {
+            // Skip start variables
+            if (startVariables.contains(var)) {
+                continue;
+            }
+
+            // Get the set of rules for the current variable
+            Set<List<String>> rulesForVar = rules.get(var);
+
+            // Remove lists containing only epsilon from the set
+            rulesForVar.removeIf(list -> list.size() == 1 && list.get(0).equals(epsilon));
+
+            // If the set is empty, remove the entry from the map
+            if (rulesForVar.isEmpty()) {
+                rules.remove(var);
+            }
+        }
+    }
+    // Helper method to find nullable vars
+    private Set<String> findNullableVars() {
+        Set<String> nullableVars = new HashSet<>();
+
+        // Iterate through the rules to find directly nullable vars
+        for (String var : getVariables()) {
+            Set<List<String>> varAlternatives = rules.get(var);
+            for (List<String> alternative : varAlternatives) {
+                if (alternative.size() == 1 && alternative.get(0).equals(ContextFreeGrammar.epsilon)) {
+                    nullableVars.add(var);
+                    break;  // Break after finding one nullable alternative for the current variable
+                }
+            }
+        }
+
+        // Iterate until no new nullable vars are found
+        int previousSize;
+        do {
+            previousSize = nullableVars.size();
+
+            for (String var : getVariables()) {
+                Set<List<String>> varAlternatives = rules.get(var);
+                for (List<String> alternative : varAlternatives) {
+                    if (containsNullableVar(alternative, nullableVars)) {
+                        nullableVars.add(var);
+                        break;  // Break after finding one nullable alternative for the current variable
+                    }
+                }
+            }
+        } while (nullableVars.size() > previousSize);
+
+        return nullableVars;
+    }
+
+    // Helper method to check if an alternative contains at least one nullable var
+    private boolean containsNullableVar(List<String> alternative, Set<String> nullableVars) {
+        return alternative.stream().anyMatch(nullableVars::contains);
+    }
+
+
 
     /**
      * for rules of the form A -> B, remove this alternative from A and instead add all B alternatives to A
@@ -358,10 +454,19 @@ public class ContextFreeGrammar {
         }
     }
 
-/*
+
+    public void toChomskyNormalForm(){
+
+        removeStartVarFromRightSides();
+        removeNonSolitaryTerminals();
+        removeRulesWithRightSideGreaterTwo();
+        removeEpsilonRules();
+        removeUnitRules();
+    }
+
     public ContextFreeGrammar parse(String cfgString){
 
         return CFGParser.parseGrammarString(cfgString);
     }
-*/
+
 }

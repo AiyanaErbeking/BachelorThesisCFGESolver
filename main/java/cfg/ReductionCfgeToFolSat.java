@@ -6,7 +6,9 @@ import folformula.terms.*;
 import folformula.writers.TPTPWriter;
 
 import java.util.*;
-
+/**
+ * INPUT GRAMMARS NEED TO BE IN CNF AND DO NOT CONTAIN EPSILON
+ * */
 public class ReductionCfgeToFolSat extends TPTPWriter {
 
     public FOLFormula reduce(ContextFreeGrammar C1, ContextFreeGrammar C2){
@@ -102,29 +104,22 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
      * */
     public FOLFormula encodingCYKTable(ContextFreeGrammar CFG){
 
-        Set<String> variables = CFG.getVariables();
-        Set<String> rules = (Set<String>) CFG.getRules();
-        String grammarName = CFG.getName();
-
         Variable X = new Variable("X");
         Variable Y = new Variable("Y");
 
-        FOLFormula existTerminalRules = subwordsLengthOne(variables, rules, grammarName);
-        FOLFormula existNonTerminalRules = subwordsGreaterOne(variables, rules, grammarName);
-
-        // if one of the two subformulae is null, then no conjunction...
-        if (existTerminalRules == null) return new ForAll(X, new ForAll(Y, existNonTerminalRules));
-
-        if (existNonTerminalRules == null) return new ForAll(X, new ForAll(Y, existTerminalRules));
-
         // because we throw an exception if the grammar var set is empty, it cannot be that both subformulae are null, so here both must be != null:
-        return new ForAll(X, new ForAll(Y, new Conjunction(subwordsLengthOne(variables, rules, grammarName), subwordsGreaterOne(variables, rules, grammarName))));
+        return new ForAll(X, new ForAll(Y, new Conjunction(subwordsLengthOne(CFG), subwordsGreaterOne(CFG))));
     }
 
     /**
      * sub-formula: CYK Table entries where sub-word has length 1 ie. V =>* w iff V -> sigma
      * */
-    public FOLFormula subwordsLengthOne(Set<String> variables, Set<String> rules, String grammarName){
+    public FOLFormula subwordsLengthOne(ContextFreeGrammar cfg){
+
+        Set<String> variables = cfg.getVariables();
+        Map<String, Set<List<String>>> rules = cfg.getRules();
+        String grammarName = cfg.getName();
+
 
         Variable X = new Variable("X");
         Variable Y = new Variable("Y");
@@ -133,22 +128,25 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
         if (rules.isEmpty()) throw new IllegalStateException("CFG rules is empty!");
 
         List<String> vars = new ArrayList<>(variables);
-        List<String> productions = new ArrayList<>(rules);
 
         ArrayList<FOLFormula> conjunctionList = new ArrayList<>();
 
         //a set of grammar variables which have terminal rules (map directly to a letter)
         Set<String> varWithTerminalRule = new HashSet<>();
 
-        for (String var : vars){
-            for (String rule : productions) {
-                if (rule.length() == 2) {
-                    if (Objects.equals(rule.substring(0, 1), var)) {
-                        varWithTerminalRule.add(var);
-                    }
+        for (String var : vars) {
+            // Get the rules associated with the current variable
+            Set<List<String>> varRules = rules.get(var);
+
+            // Check if any rule has length 1 and is part of the alphabet
+            for (List<String> rule : varRules) {
+                if (rule.size() == 1 && cfg.getAlphabet().contains(rule.get(0))) {
+                    varWithTerminalRule.add(var);
+                    break;  // No need to check further if a rule is found
                 }
             }
         }
+
 
         //a set of grammar vars having non terminal rules
         Set<String> varWithoutTerminalRule = new HashSet<>(variables);
@@ -164,21 +162,20 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
             varTableau.setAssociatedGrammarName(grammarName);
             varTableau.setAssociatedVariable(var);
 
-            List<String> terminalProductionsFromVar = new ArrayList<>();
-            for (String rule : productions){
-                if (rule.length() == 2){
-                    if (Objects.equals(rule.substring(0, 1), var)){
-                        terminalProductionsFromVar.add(rule);
-                    }
+            // a list containing all letters which can be generated from var
+            List<String> terminalsFromVar = new ArrayList<>();
+            for (List<String> varRule : rules.get(var)){
+                if (varRule.size() == 1 && cfg.getAlphabet().contains(varRule.get(0))) {
+                    terminalsFromVar.add(varRule.get(0));
                 }
             }
 
             ArrayList<FOLFormula> disjunctionList = new ArrayList<>();
 
-            for (String rule : terminalProductionsFromVar){
+            for (String terminal : terminalsFromVar){
 
                 LetterAtPos letterFromTerminalProductionsOfVar = new LetterAtPos(X);
-                letterFromTerminalProductionsOfVar.setAssociatedLetter(rule.substring(1, 2));
+                letterFromTerminalProductionsOfVar.setAssociatedLetter(terminal);
 
                 disjunctionList.add(letterFromTerminalProductionsOfVar);
             }
@@ -186,7 +183,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
             conjunctionList.add(new Equivalence(varTableau, new Disjunction(disjunctionList)));
 
             // in preparation for the next loop iterating over terminal production rules of a new grammar var
-            terminalProductionsFromVar.clear();
+            terminalsFromVar.clear();
 
         }
 
@@ -210,7 +207,11 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
     /**
      * sub-formula: CYK Table entries where sub-word has length > 1 ie. V =>* w iff V -> AB
      * */
-    public FOLFormula subwordsGreaterOne(Set<String> variables, Set<String> rules, String grammarName){
+    public FOLFormula subwordsGreaterOne(ContextFreeGrammar cfg){
+
+        Set<String> variables = cfg.getVariables();
+        Map<String, Set<List<String>>> rules = cfg.getRules();
+        String grammarName = cfg.getName();
 
         if (variables.isEmpty()) throw new IllegalStateException("CFG variables is empty!");
         if (rules.isEmpty()) throw new IllegalStateException("CFG rules is empty!");
@@ -220,15 +221,18 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
         Variable K = new Variable("K");
 
         List<String> vars = new ArrayList<>(variables);
-        List<String> productions = new ArrayList<>(rules);
 
         Set<String> varWithNonTerminalRules = new HashSet<>();
-        for (String var : vars){
-            for (String rule : productions) {
-                if (rule.length() == 3) {
-                    if (Objects.equals(rule.substring(0, 1), var)) {
-                        varWithNonTerminalRules.add(var);
-                    }
+
+        for (String var : vars) {
+            // Get the rules associated with the current variable
+            Set<List<String>> varRules = rules.get(var);
+
+            // Check if any rule has length > 1
+            for (List<String> rule : varRules) {
+                if (rule.size() > 1) {
+                    varWithNonTerminalRules.add(var);
+                    break;  // No need to check further if a rule is found
                 }
             }
         }
@@ -273,26 +277,24 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
             xyTableau.setAssociatedGrammarName(grammarName);
 
 
-                List<String> nonTerminalProductionsFromVar = new ArrayList<>();
-                for (String rule : productions) {
-                    if (rule.length() == 3) {
-                        if (Objects.equals(rule.substring(0, 1), var)) {
-                            nonTerminalProductionsFromVar.add(rule);
-                        }
-                    }
-                }
+            Set<List<String>> nonTerminalProductionsFromVar = new HashSet<>();
 
+            for (List<String> varRule : rules.get(var)){
+                if (varRule.size() > 1) {
+                    nonTerminalProductionsFromVar.add(varRule);
+                }
+            }
 
                 ArrayList<FOLFormula> disjunctionList = new ArrayList<>();
 
-                for (String rule : nonTerminalProductionsFromVar) {
+                for (List<String> rule : nonTerminalProductionsFromVar) {
 
                     Tableau xkTableau = new Tableau(X, K);
                     xkTableau.setAssociatedGrammarName(grammarName);
-                    xkTableau.setAssociatedVariable(rule.substring(1, 2));
+                    xkTableau.setAssociatedVariable(rule.get(0));
 
                     Tableau kplusoneyTableau = new Tableau(KPLUSONE, Y);
-                    kplusoneyTableau.setAssociatedVariable(rule.substring(2, 3));
+                    kplusoneyTableau.setAssociatedVariable(rule.get(1));
                     kplusoneyTableau.setAssociatedGrammarName(grammarName);
 
                     // the first var from the non-term rule produces Tableau(X, K) and the second var from the rule produces Tableau(KPLUSONE, Y)

@@ -6,7 +6,11 @@ import java.util.*;
  * given a CFG as a Text/Unicode String, this class provides functionality for parsing such a string and
  * creating an equivalent CFG representation as a CFG class.
  *
- * THE PARSER ASSUMES THAT THE INPUT GRAMMAR STRING HAS WHITESPACES BTWN VARS & TERMINALS (TO ALLOW FOR VARS OF ARBITRARY LENGTH)
+ * THE PARSER ASSUMES THAT THE INPUT GRAMMAR STRING HAS WHITESPACES BTWN VARS & TERMINALS (TO ALLOW FOR VARS OF ARBITRARY LENGTH).
+ *
+ * check the symbols that are allowed to rep epsilon below.
+ *
+ * any string of length ==1 that doesn't start with a capital letter is considered part of the alphabet
  * */
 public class CFGParser {
 

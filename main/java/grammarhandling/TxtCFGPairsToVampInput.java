@@ -6,4 +6,6 @@ package grammarhandling;
  * of their equivalence to a format of FOL SAT accepted by Vampire
  * */
 public class TxtCFGPairsToVampInput {
+
+
 }
