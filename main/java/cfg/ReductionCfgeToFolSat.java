@@ -230,7 +230,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
 
             // Check if any rule has length > 1
             for (List<String> rule : varRules) {
-                if (rule.size() > 1) {
+                if (rule.size() == 2) {
                     varWithNonTerminalRules.add(var);
                     break;  // No need to check further if a rule is found
                 }
@@ -280,7 +280,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
             Set<List<String>> nonTerminalProductionsFromVar = new HashSet<>();
 
             for (List<String> varRule : rules.get(var)){
-                if (varRule.size() > 1) {
+                if (varRule.size() == 2) {
                     nonTerminalProductionsFromVar.add(varRule);
                 }
             }

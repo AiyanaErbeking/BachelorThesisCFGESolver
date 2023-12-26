@@ -1,5 +1,7 @@
 import cfg.ContextFreeGrammar;
+import cfg.ContextFreeGrammarEquivalenceProblem;
 import cfg.ReductionCfgeToFolSat;
+import grammarhandling.TxtCFGPairsToVampInput;
 import org.junit.Test;
 
 import java.util.*;
@@ -34,6 +36,11 @@ public class ReductionCfgeSatTest {
         ContextFreeGrammar grammar = new ContextFreeGrammar("ExampleGrammar", rulesMap);
 
         grammar.toChomskyNormalForm();
+
+        ContextFreeGrammarEquivalenceProblem cfge = new ContextFreeGrammarEquivalenceProblem(grammar, grammar);
+
+        //System.out.println(cfge.reduceToTPTPFolSat());
+
         System.out.println("Grammar Name: " + grammar.getName());
         System.out.println("Rules:");
         for (Map.Entry<String, Set<List<String>>> entry : grammar.getRules().entrySet()) {
@@ -42,10 +49,10 @@ public class ReductionCfgeSatTest {
         System.out.println(grammar.getAlphabet());
 
 
-        //System.out.println(reductionCfgeToFolSat.encodingWordStructure(C1, C2).writeToTPTP());
-        //System.out.print(reductionCfgeToFolSat.subwordsLengthOne(C1.getVariables(), C1.getRules(), C1.getName()).writeToTPTP());
-        //System.out.println(reductionCfgeToFolSat.encodingGrammarInequivalence(C1, C2).writeToTPTP());
-        //System.out.println(reductionCfgeToFolSat.subwordsGreaterOne(C1.getVariables(), C1.getRules(), C1.getName()).writeToTPTP());
+        //System.out.println(reductionCfgeToFolSat.encodingWordStructure(grammar, grammar).writeToTPTP());
+        //System.out.print(reductionCfgeToFolSat.subwordsLengthOne(grammar).writeToTPTP());
+        //System.out.println(reductionCfgeToFolSat.encodingGrammarInequivalence(grammar, grammar).writeToTPTP());
+        System.out.println(reductionCfgeToFolSat.subwordsGreaterOne(grammar);
         //System.out.println(reductionCfgeToFolSat.encodingCYKTable(C2).writeToTPTP());
         //System.out.println(reductionCfgeToFolSat.reduce(C1, C2).writeToTPTP());
 
@@ -63,6 +70,9 @@ public class ReductionCfgeSatTest {
 
         //SelectingCFGPairs selectingCFGPairs = new SelectingCFGPairs();
         //selectingCFGPairs.readCSVFile();
+
+        TxtCFGPairsToVampInput txtCFGPairsToVampInput = new TxtCFGPairsToVampInput();
+        //txtCFGPairsToVampInput.parseAndWriteGrammars();
     }
 
 }

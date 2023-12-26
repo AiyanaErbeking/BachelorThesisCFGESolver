@@ -25,7 +25,7 @@ public class CFGParser {
 
         for (String line : lines) {
             // Split each line into components
-            String[] components = line.split("\\s*->\\s*");
+            String[] components = line.split("\\s*[-→]+\\s*");
 
             if (components.length == 2) {
                 String variable = components[0].trim();

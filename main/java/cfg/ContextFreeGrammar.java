@@ -464,7 +464,7 @@ public class ContextFreeGrammar {
         removeUnitRules();
     }
 
-    public ContextFreeGrammar parse(String cfgString){
+    public static ContextFreeGrammar parse(String cfgString){
 
         return CFGParser.parseGrammarString(cfgString);
     }
