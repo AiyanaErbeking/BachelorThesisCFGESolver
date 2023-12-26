@@ -42,33 +42,34 @@ public class SelectingCFGPairs {
 
     // THE SOLUTION GRAMMARS FOR EACH PROBLEM ID (1 ... 7) =============================================================
     private final String solutionGrammarOne =
-                    "S → aSb|L|R\n" +
-                    "L → bLb|B\n" +
-                    "R → aRa|B\n" +
-                    "B → bBa|ε";
+            "S → a S b | L | R\n" +
+                    "L → b L b | B\n" +
+                    "R → a R a | B\n" +
+                    "B → b B a | ε";
 
     private final String solutionGrammarTwo =
-                    "S → XY\n" +
-                    "X → ε|aXb\n" +
-                    "Y → ε|bYa";
+            "S → X Y\n" +
+                    "X → ε | a X b\n" +
+                    "Y → ε | b Y a";
 
     private final String solutionGrammarThree =
-                    "S → aTb\n" +
-                    "T → aTb|a|b";
+            "S → a T b\n" +
+                    "T → a T b | a | b";
 
     private final String solutionGrammarFour =
-                    "S → AX|YC\n" +
-                    "X → bB|cC|bXc\n" +
-                    "Y → aA|bB|aYb\n" +
-                    "A → ε|aA\n" +
-                    "B → ε|bB\n" +
-                    "C → ε|cC";
+            "S → A X | Y C\n" +
+                    "X → b B | c C | b X c\n" +
+                    "Y → a A | b B | a Y b\n" +
+                    "A → ε | a A\n" +
+                    "B → ε | b B\n" +
+                    "C → ε | c C";
 
-    private final String solutionGrammarFive = "S → ε|SS|(S)|[S]|{S}";
+    private final String solutionGrammarFive = "S → ε | S S | ( S ) | [ S ] | { S }";
 
-    private final String solutionGrammarSix = "S -> ε | SS | a S a S b | b S a S a | a S b S a";
+    private final String solutionGrammarSix = "S → ε | S S | a S a S b | b S a S a | a S b S a";
 
-    private final String solutionGrammarSeven = "S → ab|aSb";
+    private final String solutionGrammarSeven = "S → a b | a S b";
+
 
 
 

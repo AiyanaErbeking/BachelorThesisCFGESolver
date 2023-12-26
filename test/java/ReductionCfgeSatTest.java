@@ -1,64 +1,50 @@
+import cfg.CFGParser;
 import cfg.ContextFreeGrammar;
 import cfg.ReductionCfgeToFolSat;
-import grammarhandling.SelectingCFGPairs;
 import org.junit.Test;
-import vampirehandling.VampireHandler;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class ReductionCfgeSatTest {
 
     public ReductionCfgeToFolSat reductionCfgeToFolSat = new ReductionCfgeToFolSat();
 
+
+
     @Test
     public void  testReduction(){
 
-        Set<String> alphabet = new HashSet<>();
-        alphabet.add("a");
-        alphabet.add("b");
+        // Creating a map of rules
+        Map<String, Set<List<String>>> rulesMap = new HashMap<>();
 
-        // Grammar C1
-        Set<String> c1vars = new HashSet<>();
-        c1vars.add("S");
-        c1vars.add("X");
-        c1vars.add("Y");
-        c1vars.add("Z");
+        // Adding rules for variable 'S'
+        Set<List<String>> sRules = new HashSet<>();
+        sRules.add(Arrays.asList("a", "A", "b"));
+        sRules.add(Arrays.asList("c", "S", "a"));
+        sRules.add(List.of("A"));
+        rulesMap.put("S", sRules);
 
-        Set<String> c1rules = new HashSet<>();
-        c1rules.add("SXY");
-        c1rules.add("Xa");
-        c1rules.add("Yb");
-        c1rules.add("XZZ");
-        c1rules.add("Za");
-        c1rules.add("Zb");
+        // Adding rules for variable 'A'
+        Set<List<String>> aRules = new HashSet<>();
+        aRules.add(Collections.singletonList("x"));
+        aRules.add(Arrays.asList("y", "A", "z"));
+        rulesMap.put("A", aRules);
 
-        Set<String> c1start = new HashSet<>();
-        c1start.add("S");
-        c1start.add("X");
-
-        Set<String> c2vars = new HashSet<>();
-        c2vars.add("S");
-        c2vars.add("X");
-        c2vars.add("Y");
-        c2vars.add("Z");
-
-        Set<String> c2rules = new HashSet<>();
-        c2rules.add("SXZ");
-        c2rules.add("Xa");
-        c2rules.add("Yb");
-        c2rules.add("XZZ");
-        c2rules.add("ZA");
-        c2rules.add("ZB");
-
-        Set<String> c2start = new HashSet<>();
-        c2start.add("S");
-        c2start.add("Y");
+        // Creating an instance of ContextFreeGrammar
+        //ContextFreeGrammar grammar = new ContextFreeGrammar("ExampleGrammar", rulesMap);
 
 
-        ContextFreeGrammar C1 = new ContextFreeGrammar("c_one", c1vars, alphabet, c1rules, c1start);
-        ContextFreeGrammar C2 = new ContextFreeGrammar("c_two", c1vars, alphabet, c1rules, c1start);
-
+        String grammarString = "S -> a S b | A | B | ?\n" +
+                "A -> a A1 a | C\n" +
+                "B -> b B b | C\n" +
+                "C -> b } a | ?";
+        ContextFreeGrammar grammar = CFGParser.parseGrammarString(grammarString);
+        System.out.println("Grammar Name: " + grammar.getName());
+        System.out.println("Rules:");
+        for (Map.Entry<String, Set<List<String>>> entry : grammar.getRules().entrySet()) {
+            System.out.println(entry.getKey() + " -> " + entry.getValue());
+        }
+        System.out.println(grammar.getAlphabet());
 
 
         //System.out.println(reductionCfgeToFolSat.encodingWordStructure(C1, C2).writeToTPTP());
@@ -68,20 +54,20 @@ public class ReductionCfgeSatTest {
         //System.out.println(reductionCfgeToFolSat.encodingCYKTable(C2).writeToTPTP());
         //System.out.println(reductionCfgeToFolSat.reduce(C1, C2).writeToTPTP());
 
-        VampireHandler vampireHandler = new VampireHandler();
+        //VampireHandler vampireHandler = new VampireHandler();
 
         //vampireHandler.runVampire("20", Boolean.TRUE);
 
 
-        String grammarString = "S -> a S b | A | B | ?\n" +
+        /*String grammarString = "S -> a S b | A | B | ?\n" +
                     "A -> a A a | C\n" +
                     "B -> b B b | C\n" +
                     "C -> b C a | ?";
-
+        */
         //CFGParser.parseGrammarString(grammarString).getAlphabet();
 
-        SelectingCFGPairs selectingCFGPairs = new SelectingCFGPairs();
-        selectingCFGPairs.readCSVFile();
+        //SelectingCFGPairs selectingCFGPairs = new SelectingCFGPairs();
+        //selectingCFGPairs.readCSVFile();
     }
 
 }

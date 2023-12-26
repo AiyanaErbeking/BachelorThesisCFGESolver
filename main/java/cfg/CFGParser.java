@@ -1,11 +1,12 @@
 package cfg;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * given a CFG as a Text/Unicode String, this class provides functionality for parsing such a string and
- * creating an equivalent CFG representation as a CFG class
+ * creating an equivalent CFG representation as a CFG class.
+ *
+ * THE PARSER ASSUMES THAT THE INPUT GRAMMAR STRING HAS WHITESPACES BTWN VARS & TERMINALS (TO ALLOW FOR VARS OF ARBITRARY LENGTH)
  * */
 public class CFGParser {
 
@@ -13,10 +14,7 @@ public class CFGParser {
     public static ContextFreeGrammar parseGrammarString(String grammarString) {
 
         String nameCFG = "studentCFG";
-        Set<String> variables = new HashSet<>();
-        Set<String> alphabet = new HashSet<>();
-        Set<String> rules = new HashSet<>();
-        Set<String> startVariables = new HashSet<>();
+        Map<String, Set<List<String>>> rules = new HashMap<>();
 
         // Split the grammar string into lines
         String[] lines = grammarString.split("\\n");
@@ -29,35 +27,32 @@ public class CFGParser {
                 String variable = components[0].trim();
                 String[] alternatives = components[1].split("\\s*\\|\\s*");
 
-                // Add variable to variables set
-                variables.add(variable);
+                // Add variable to rules map
+                rules.put(variable, new HashSet<>());
 
                 for (String alternative : alternatives) {
-                    // Remove non-letter characters and whitespace from the rule
-                    String rule = alternative.trim().replaceAll("[^a-zA-Z]", "");
+                    List<String> ruleList = new ArrayList<>();
 
-                    for (int i = 0; i < rule.length(); i++) {
-                        char symbol = rule.charAt(i);
-                        if (Character.isLowerCase(symbol)) {
-                            alphabet.add(String.valueOf(symbol));
+                    // Split the alternative into variables and symbols
+                    String[] parts = alternative.trim().split("\\s+");
+                    for (String part : parts) {
+                        if (part.equals("?") || part.equals("ε") || part.equals("ɛ")) {
+                            ruleList.add(ContextFreeGrammar.epsilon);
+                        } else {
+                            ruleList.add(part);
                         }
                     }
 
-                    // Add all alternatives to the rule set with the variable from which they are generated.
-                    // rule is only ever empty if the alternative was of the form: | ?
-                    if (!rule.isEmpty()) rules.add(variable + rule);
+                    // Add rule to the set associated with the variable
+                    rules.computeIfAbsent(variable, k -> new HashSet<>()).add(ruleList);
                 }
 
             } else {
                 // Invalid grammar string format
                 throw new IllegalArgumentException("Invalid grammar string format: " + line);
             }
-
-            // Set the start variable to "S" (assuming it is always "S")
-            startVariables.add("S");
         }
 
-        return new ContextFreeGrammar(nameCFG, variables, alphabet, rules, startVariables);
+        return new ContextFreeGrammar(nameCFG, rules);
     }
-
 }

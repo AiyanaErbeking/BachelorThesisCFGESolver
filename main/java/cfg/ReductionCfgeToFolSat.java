@@ -103,7 +103,7 @@ public class ReductionCfgeToFolSat extends TPTPWriter {
     public FOLFormula encodingCYKTable(ContextFreeGrammar CFG){
 
         Set<String> variables = CFG.getVariables();
-        Set<String> rules = CFG.getRules();
+        Set<String> rules = (Set<String>) CFG.getRules();
         String grammarName = CFG.getName();
 
         Variable X = new Variable("X");
