@@ -1,8 +1,8 @@
 import cfg.ContextFreeGrammar;
-import cfg.ContextFreeGrammarEquivalenceProblem;
 import cfg.ReductionCfgeToFolSat;
 import grammarhandling.TxtCFGPairsToVampInput;
 import org.junit.Test;
+import vampirehandling.VampireHandler;
 
 import java.util.*;
 
@@ -35,24 +35,18 @@ public class ReductionCfgeSatTest {
         // Creating an instance of ContextFreeGrammar
         //ContextFreeGrammar grammar = new ContextFreeGrammar("ExampleGrammar", rulesMap);
 
-        String gram = "S → ε | S S | a S a S b | b S a S a | a S b S a";
-        ContextFreeGrammar cfg = ContextFreeGrammar.parse("g", gram);
+        String solutionGrammarFive = "S → ε | S S | ( S ) | [ S ] | { S }";
+        ContextFreeGrammar cfg = ContextFreeGrammar.parse("g", solutionGrammarFive);
 
-        String gram2 = "S -> A | ?\n" +
-                "A -> B C C | C B C | C C B\n" +
-                "B -> A B | B A | b\n" +
-                "C -> A C | C A | a\n";
+        System.out.println("Rules:");
+        for (Map.Entry<String, Set<List<String>>> entry : cfg.getRules().entrySet()) {
+            System.out.println(entry.getKey() + " -> " + entry.getValue());
+        }
 
-        ContextFreeGrammar cfg2 = ContextFreeGrammar.parse("num2", gram2);
+        //System.out.println( "Start vars: " + cfg.getStartVariables());
 
-        System.out.println( "Start vars: " + cfg.getStartVariables());
-
-        cfg.removeStartVarFromRightSides();
-        cfg.removeNonSolitaryTerminals();
-        cfg.removeRulesWithRightSideGreaterTwo();
-        cfg.removeEpsilonRules();
-        cfg.removeUnitRules();
-
+        cfg.toChomskyNormalForm();
+/*
         System.out.println("Rules:");
         for (Map.Entry<String, Set<List<String>>> entry : cfg.getRules().entrySet()) {
             System.out.println(entry.getKey() + " -> " + entry.getValue());
@@ -78,7 +72,7 @@ public class ReductionCfgeSatTest {
         //System.out.println(cfge.reduceToTPTPFolSat());
 
 
-
+*/
 
         //System.out.println(reductionCfgeToFolSat.encodingWordStructure(grammar, grammar).writeToTPTP());
         //System.out.print(reductionCfgeToFolSat.subwordsLengthOne(grammar).writeToTPTP());
@@ -87,9 +81,9 @@ public class ReductionCfgeSatTest {
         //System.out.println(reductionCfgeToFolSat.encodingCYKTable(grammar).writeToTPTP());
         //System.out.println(reductionCfgeToFolSat.reduce(cfg, cfg2).writeToTPTP());
 
-        //VampireHandler vampireHandler = new VampireHandler();
+        VampireHandler vampireHandler = new VampireHandler();
 
-        //vampireHandler.runVampire("20", Boolean.TRUE);
+        //vampireHandler.runVampire("30", Boolean.TRUE);
 
 
         /*String grammarString = "S -> a S b | A | B | ?\n" +
@@ -103,7 +97,9 @@ public class ReductionCfgeSatTest {
         //selectingCFGPairs.readCSVFile();
 
         TxtCFGPairsToVampInput txtCFGPairsToVampInput = new TxtCFGPairsToVampInput();
-        txtCFGPairsToVampInput.parseAndWriteGrammars();
+        //txtCFGPairsToVampInput.parseAndWriteGrammars();
+
+
     }
 
 }

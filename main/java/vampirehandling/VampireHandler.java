@@ -38,10 +38,10 @@ public class VampireHandler {
     private String invokeVampire(Path inputFilePath, String timeLimitSeconds, Boolean modeCascSat) throws IOException {
 
         // Get the file name from the Path object
-        String fileName = inputFilePath.getFileName().toString();
+        String inputFileName = inputFilePath.getFileName().toString();
 
         // Construct the relative path to the input file
-        String relativePathToInputFile = inputDirectoryName + "/" + fileName;
+        String relativePathToInputFile = inputDirectoryName + "/" + inputFileName;
 
         String vampModeOption = modeCascSat ? "--mode casc_sat" : "--mode casc";
 
@@ -110,7 +110,13 @@ public class VampireHandler {
             Files.walkFileTree(inputDirPath, EnumSet.noneOf(FileVisitOption.class), Integer.MAX_VALUE, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    if (Files.isRegularFile(file) && file.toString().endsWith(".p")) {
+
+                    if (file.getFileName().toString().contains("TriviallyUnequal")){
+                        Path outputFile = outputDirPath.resolve(file.getFileName() + "_answer.txt");  // New output directory
+                        Files.write(outputFile, "Trivially Unequal".getBytes());
+                    }
+
+                    else if (Files.isRegularFile(file) && file.toString().endsWith(".p")) {
                         fileNumber[0] +=1;
 
                         // Log progress
@@ -119,18 +125,20 @@ public class VampireHandler {
                         // Invoke Vampire and get the output
                         String vampireOutput = invokeVampire(file, timeLimitSeconds, modeCascSat);
 
-                        // Write the output to a new file
-                        Path outputFile = outputDirPath.resolve(file.getFileName() + "_answer.txt");  // New output directory
-                        Files.write(outputFile, vampireOutput.getBytes());
-
                         String result;
                         if (vampireOutput.contains("Termination reason: Satisfiable")) {
                             result = "SAT";
                         } else if (vampireOutput.contains("status Unsatisfiable") || vampireOutput.contains("Termination reason: Refutation")) {
                             result = "UNSAT";
+                        } else if (vampireOutput.contains("Parsing Error")) {
+                            result = "ParsingError";
                         } else {
                             result = "UNKNOWN";
                         }
+
+                        // Write the output to a new file
+                        Path outputFile = outputDirPath.resolve(file.getFileName() + "_" + result + "_answer.txt");  // New output directory
+                        Files.write(outputFile, vampireOutput.getBytes());
 
                         System.out.println(getTimestamp() + "Output " + result + " written to: " + outputFile.getFileName().toString() + "\n");
                     }

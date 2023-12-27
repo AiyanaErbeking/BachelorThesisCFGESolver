@@ -47,8 +47,8 @@ public class TxtCFGPairsToVampInput {
 
             String nameOfCurrentFileRead = String.valueOf(txtFilePath.getFileName());
 
-            C1 = ContextFreeGrammar.parse("Solution", grammars[0]);
-            C2 = ContextFreeGrammar.parse("Student", grammars[1]);
+            C1 = ContextFreeGrammar.parse("solution", grammars[0]);
+            C2 = ContextFreeGrammar.parse("student", grammars[1]);
 
             if (C1==null | C2==null) throw new RuntimeException("parsing seems to have failed for at least one grammar");
 
