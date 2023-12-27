@@ -47,15 +47,18 @@ public class TxtCFGPairsToVampInput {
 
             String nameOfCurrentFileRead = String.valueOf(txtFilePath.getFileName());
 
-            C1 = ContextFreeGrammar.parse(grammars[0]);
-            C2 = ContextFreeGrammar.parse(grammars[1]);
+            C1 = ContextFreeGrammar.parse("Solution", grammars[0]);
+            C2 = ContextFreeGrammar.parse("Student", grammars[1]);
 
-            C1.toChomskyNormalForm();
-            C2.toChomskyNormalForm();
+            if (C1==null | C2==null) throw new RuntimeException("parsing seems to have failed for at least one grammar");
 
             ContextFreeGrammarEquivalenceProblem cfge = new ContextFreeGrammarEquivalenceProblem(C1, C2);
 
             String tptpReductionString = cfge.reduceToTPTPFolSat();
+
+            // so that these files can be skipped when feeding to Vampire
+            if (tptpReductionString.equals("Trivially Unequal"))
+                nameOfCurrentFileRead = nameOfCurrentFileRead.replace(".txt", "TriviallyUnequal");
 
             writeToInputProbFile(tptpReductionString, nameOfCurrentFileRead);
 

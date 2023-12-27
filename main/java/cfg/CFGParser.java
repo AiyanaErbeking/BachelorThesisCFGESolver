@@ -15,9 +15,8 @@ import java.util.*;
 public class CFGParser {
 
     // Parse a context-free grammar string and create an instance of ContextFreeGrammar
-    public static ContextFreeGrammar parseGrammarString(String grammarString) {
+    public static ContextFreeGrammar parseGrammarString(String name, String grammarString) {
 
-        String nameCFG = "studentCFG";
         Map<String, Set<List<String>>> rules = new HashMap<>();
 
         // Split the grammar string into lines
@@ -25,7 +24,7 @@ public class CFGParser {
 
         for (String line : lines) {
             // Split each line into components
-            String[] components = line.split("\\s*[-→]+\\s*");
+            String[] components = line.split("\\s*[->→]+\\s*");
 
             if (components.length == 2) {
                 String variable = components[0].trim();
@@ -57,6 +56,6 @@ public class CFGParser {
             }
         }
 
-        return new ContextFreeGrammar(nameCFG, rules);
+        return new ContextFreeGrammar(name, rules);
     }
 }

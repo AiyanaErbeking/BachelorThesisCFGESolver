@@ -21,6 +21,9 @@ public class ContextFreeGrammar {
     private Boolean containsUnreachableVars = Boolean.TRUE;
     private Boolean containsNonGeneratingVars = Boolean.TRUE;
 
+    private Boolean inChomskyNF = Boolean.FALSE;
+    private Boolean generatesEpsilon = Boolean.FALSE;
+
 
     public static String epsilon = "ε";
 
@@ -28,9 +31,10 @@ public class ContextFreeGrammar {
 
     // HELPER METHODS FOR DETERMINING VALUE OF GRAMMAR ATTRIBUTES NOT INITIALISED IN CONSTRUCTOR =======================
 
-    private Set<String> findVariables() { return rules.keySet(); }
+    private Set<String> initVariables() { return rules.keySet(); }
 
-    private Set<String> findAlphabet() {
+    private Set<String> initAlphabet() {
+
         Set<String> alphabet = new HashSet<>();
 
         // Iterate through the rules
@@ -63,7 +67,7 @@ public class ContextFreeGrammar {
         this.name = name;
         this.rules = rules;
         this.variables = rules.keySet();
-        this.alphabet = findAlphabet();
+        this.alphabet = initAlphabet();
         this.startVariables = initStartVars();
 
     }
@@ -72,7 +76,7 @@ public class ContextFreeGrammar {
     // GETTERS =========================================================================================================
 
     public Set<String> getAlphabet() {
-        return alphabet;
+        return initAlphabet();
     }
 
     public Map<String, Set<List<String>>> getRules() {
@@ -83,7 +87,7 @@ public class ContextFreeGrammar {
         return startVariables;
     }
 
-    public Set<String> getVariables(){ return variables; }
+    public Set<String> getVariables(){ return initVariables(); }
 
     public String getName() { return name; }
 
@@ -129,16 +133,33 @@ public class ContextFreeGrammar {
         return !(containsNonGeneratingVars | containsUnreachableVars);
     }
 
+    public Boolean isInChomskyNF(){ return inChomskyNF; }
+
     /**
-     * can the word epsilon be generated from the start var?
+     * CONVERT TO CNF FIRST. can the word epsilon be generated from the start var?
      * */
-    public Boolean isEpsilonGenerated(){
+    public Boolean isEpsilonGenerated(){ return generatesEpsilon; }
 
-        if (isGrammarClean() && getAlphabet().contains(epsilon))
-            return Boolean.TRUE;
+    public void toChomskyNormalForm(){
 
-        return Boolean.FALSE;
+        removeStartVarFromRightSides();
+        removeNonSolitaryTerminals();
+        removeRulesWithRightSideGreaterTwo();
+        removeEpsilonRules();
+        removeUnitRules();
+
+        inChomskyNF = Boolean.TRUE;
     }
+
+    public static ContextFreeGrammar parse(String name, String cfgString){
+
+        return CFGParser.parseGrammarString(name, cfgString);
+    }
+
+
+
+
+
 
 
     // METHODS REQUIRED FOR CONVERSION TO CHOMSKY NORMAL FORM ==========================================================
@@ -172,6 +193,7 @@ public class ContextFreeGrammar {
         // Add new start variable only if needed
         if (shouldAddNewStartVar) {
             String newStartVar = "S0";
+            assert (!variables.contains(newStartVar)) : "S0 already exists in this grammar";
             Set<String> oldStarts = new HashSet<>(startVariables);
             startVariables.clear();
             startVariables.add(newStartVar);
@@ -197,15 +219,29 @@ public class ContextFreeGrammar {
             Set<List<String>> varRightSides = new HashSet<>(rules.get(var));  // Copy of the set to avoid concurrent modification
 
             for (List<String> varRightSide : varRightSides) {
+                // what will be replaced as the new right side
                 List<String> updatedVarRightSide = new ArrayList<>(varRightSide);
 
+                // only interesting when length >1
+                int varRightSideLength = varRightSide.size();
+
+                // we need to keep track of the current position in rightSide otherwise indexOf(symbol) returns index where symbol
+                // FIRST APPEARS, not the CURRENT symbol index
+                int posInRightSide = 0;
+
+                // look at every symbol in this right side
                 for (String symbol : varRightSide) {
-                    // Replace each non-solitary terminal with a generating Var
-                    if (alphabet.contains(symbol) && varRightSide.size() > 1) {
+
+                    // is the symbol a non-solitary terminal?
+                    if (alphabet.contains(symbol) && varRightSideLength > 1) {
+
                         // terminalVar either already exists, or is created new along with an associated rule
                         String terminalVar = getVariableForTerminal(symbol);
-                        updatedVarRightSide.set(varRightSide.indexOf(symbol), terminalVar);
+
+                        // overwrite the solitary terminal with the Var that generates it
+                        updatedVarRightSide.set(posInRightSide, terminalVar);
                     }
+                    posInRightSide ++;
                 }
 
                 // Update the right side in the rules map
@@ -217,6 +253,7 @@ public class ContextFreeGrammar {
     private String getVariableForTerminal(String terminal) {
         // Check if there exists a rule Var -> terminal
         for (String var : rules.keySet()) {
+            // if the var has exactly one right side and this side contains only the terminal
             if (rules.get(var).size() == 1 && rules.get(var).iterator().next().equals(Collections.singletonList(terminal))) {
                 return var;
             }
@@ -336,22 +373,31 @@ public class ContextFreeGrammar {
 
             for (List<String> alternative : varAlternatives) {
 
-                // Replace nullable vars with ε
+                // Replace right sides where nullable appears...
                 for (String nullableVar : nullableVars) {
 
-                    List<String> altsWithoutNullable = new ArrayList<>();
-
+                    // iterate through the alternative and check if a nullable appears
                     for (int i = 0; i < alternative.size(); i++) {
 
+                        List<String> altWithNullableOmitted = new ArrayList<>();
+
+                        // the moment a nullable has been found, write a new rule omitting this nullable and then
+                        // continue searching the same alternative for more nullables
                         if (alternative.get(i).equals(nullableVar)) {
 
+                            // write a new alternative that omits the nullable at position i
                             for (int j = 0; j < alternative.size(); j++){
+                                // omit nullable at pos i
                                 if (j==i) continue;
-                                altsWithoutNullable.add(alternative.get(j));
+                                altWithNullableOmitted.add(alternative.get(j));
                             }
-                            if (altsWithoutNullable.isEmpty()) altsWithoutNullable.add(epsilon);
 
-                            updatedAlternatives.add(altsWithoutNullable);
+                            // if the alternative ONLY contained one nullable (meaning it will be empty here),
+                            // write an epsilon
+                            if (altWithNullableOmitted.isEmpty()) altWithNullableOmitted.add(epsilon);
+
+                            updatedAlternatives.add(altWithNullableOmitted);
+                            //altWithNullableOmitted.clear();
                             }
                         }
 
@@ -366,10 +412,6 @@ public class ContextFreeGrammar {
     private void removeRulesMappingToEpsilon() {
         // Iterate over all variables
         for (String var : new HashSet<>(getVariables())) {
-            // Skip start variables
-            if (startVariables.contains(var)) {
-                continue;
-            }
 
             // Get the set of rules for the current variable
             Set<List<String>> rulesForVar = rules.get(var);
@@ -380,23 +422,28 @@ public class ContextFreeGrammar {
             // If the set is empty, remove the entry from the map
             if (rulesForVar.isEmpty()) {
                 rules.remove(var);
+                if (startVariables.contains(var)) generatesEpsilon = Boolean.TRUE;
             }
         }
     }
     // Helper method to find nullable vars
+    // a nullable Var is any Var from which epsilon can be generated. ie. either directly or it has a right side
+    // in which ONLY nullable vars appear
     private Set<String> findNullableVars() {
         Set<String> nullableVars = new HashSet<>();
 
-        // Iterate through the rules to find directly nullable vars
+        // Iterate through the rules to find vars which directly generate epsilon
         for (String var : getVariables()) {
             Set<List<String>> varAlternatives = rules.get(var);
             for (List<String> alternative : varAlternatives) {
-                if (alternative.size() == 1 && alternative.get(0).equals(ContextFreeGrammar.epsilon)) {
+                if (alternative.size() == 1 && alternative.get(0).equals(epsilon)) {
                     nullableVars.add(var);
                     break;  // Break after finding one nullable alternative for the current variable
                 }
             }
         }
+
+        //System.out.println("vars that directly generate epsilon: " + nullableVars);
 
         // Iterate until no new nullable vars are found
         int previousSize;
@@ -414,12 +461,13 @@ public class ContextFreeGrammar {
             }
         } while (nullableVars.size() > previousSize);
 
+        //System.out.println("nullable vars are: " + nullableVars);
         return nullableVars;
     }
 
-    // Helper method to check if an alternative contains at least one nullable var
+    // Helper method to check if an alternative contains ONLY nullable vars
     private boolean containsNullableVar(List<String> alternative, Set<String> nullableVars) {
-        return alternative.stream().anyMatch(nullableVars::contains);
+        return nullableVars.containsAll(alternative);
     }
 
 
@@ -452,21 +500,6 @@ public class ContextFreeGrammar {
             // Update the original set with the modified alternatives
             rules.put(var, updatedAlternatives);
         }
-    }
-
-
-    public void toChomskyNormalForm(){
-
-        removeStartVarFromRightSides();
-        removeNonSolitaryTerminals();
-        removeRulesWithRightSideGreaterTwo();
-        removeEpsilonRules();
-        removeUnitRules();
-    }
-
-    public static ContextFreeGrammar parse(String cfgString){
-
-        return CFGParser.parseGrammarString(cfgString);
     }
 
 }
