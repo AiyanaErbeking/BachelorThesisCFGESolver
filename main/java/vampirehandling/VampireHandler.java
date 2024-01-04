@@ -110,7 +110,7 @@ public class VampireHandler {
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 
                     if (file.getFileName().toString().contains("TriviallyUnequal")){
-                        Path outputFile = outputDirPath.resolve(file.getFileName() + "_answer.txt");  // New output directory
+                        Path outputFile = outputDirPath.resolve(file.getFileName().toString().replace(".p", "_answer.txt"));
                         Files.write(outputFile, "Trivially Unequal".getBytes());
                     }
 
@@ -135,7 +135,7 @@ public class VampireHandler {
                         }
 
                         // Write the output to a new file
-                        Path outputFile = outputDirPath.resolve(file.getFileName() + "_" + result + "_answer.txt");  // New output directory
+                        Path outputFile = outputDirPath.resolve(file.getFileName().toString().replace(".p", "_" + result + "_answer.txt"));  // New output directory
                         Files.write(outputFile, vampireOutput.getBytes());
 
                         System.out.println(getTimestamp() + "Output " + result + " written to: " + outputFile.getFileName().toString() + "\n");

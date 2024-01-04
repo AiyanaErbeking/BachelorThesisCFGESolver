@@ -4,8 +4,8 @@ public class Main {
         String[] times = {"30", "300", "600", "1200"};
         Boolean[] cascSat = {Boolean.TRUE, Boolean.FALSE};
 
-        for (String time : times){
-            for (Boolean mode : cascSat){
+        for (Boolean mode : cascSat) {
+            for (String time : times) {
 
             }
         }
