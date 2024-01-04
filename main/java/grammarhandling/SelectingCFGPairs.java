@@ -26,7 +26,7 @@ import java.util.Map;
  */
 public class SelectingCFGPairs {
 
-    private final String outputDirName = "TextCFGPairs";
+    private final String outputDirName = "TextCFGPairsWOUnknown";
     /**
      * change this path to the directory to which all grammar-pair .txt files should be written
      * */
@@ -37,7 +37,7 @@ public class SelectingCFGPairs {
      * this is the number of student grammars taken per key (problem ID, evaluation). Adjust this sample number as needed :)
      * This number is a maximum not a guarantee; it might be the case that there are fewer grammars available for some key.
      * */
-    private final int numMaxCFGSamples = 5;
+    private final int numMaxCFGSamples = 10;
 
 
     // THE SOLUTION GRAMMARS FOR EACH PROBLEM ID (1 ... 7) =============================================================
@@ -98,6 +98,11 @@ public class SelectingCFGPairs {
 
                 // Replace ? with ε in the input grammar
                 inputGrammar = inputGrammar.replace("?", "ε");
+
+                // Skip grammars with "UNKNOWN" evaluation
+                if ("UNKNOWN".equals(evaluation)) {
+                    continue;
+                }
 
                 // Form a key for the current combination of problem id and evaluation
                 String key = problemId + "_" + evaluation;

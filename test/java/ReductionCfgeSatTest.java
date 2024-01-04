@@ -1,4 +1,5 @@
 import cfg.ReductionCfgeToFolSat;
+import grammarhandling.FileFilter;
 import grammarhandling.SelectingCFGPairs;
 import grammarhandling.TxtCFGPairsToVampInput;
 import org.junit.jupiter.api.Test;
@@ -74,7 +75,10 @@ public class ReductionCfgeSatTest {
         //System.out.println(reductionCfgeToFolSat.reduce(cfg, cfgtwo).writeToTPTP());
 
         VampireHandler vampireHandler = new VampireHandler();
-        vampireHandler.runVampire("350", Boolean.FALSE, "InputProblems", "Answers_350s_casc");
+        //vampireHandler.runVampire("3", Boolean.FALSE, "InputProblems", "Answers_3s_casc");
+
+        FileFilter fileFilter = new FileFilter();
+        //fileFilter.filterAndCopyTimeouts("Answers_3s_casc");
 
 
         /*String grammarString = "S -> a S b | A | B | ?\n" +
@@ -88,7 +92,7 @@ public class ReductionCfgeSatTest {
         //selectingCFGPairs.readCSVFile();
 
         TxtCFGPairsToVampInput txtCFGPairsToVampInput = new TxtCFGPairsToVampInput();
-        //txtCFGPairsToVampInput.parseAndWriteGrammars();
+        txtCFGPairsToVampInput.parseAndWriteGrammars();
 
     }
 

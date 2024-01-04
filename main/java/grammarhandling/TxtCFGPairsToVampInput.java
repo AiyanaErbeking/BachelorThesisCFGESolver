@@ -19,9 +19,9 @@ public class TxtCFGPairsToVampInput {
     private ContextFreeGrammar C1;
     private ContextFreeGrammar C2;
 
-    private final String inputDirName = "InputProbsFromIltis";
+    private final String inputDirName = "InputProbsFromIltisWOUnknown";
     private final String inputDirPath = "/home/dev/Vampire/" + inputDirName;
-    private final String outputDirName = "InputProblems";
+    private final String outputDirName = "InputProblemsWOUnknown";
     private final String outputDirPath = "/home/dev/Vampire/" + outputDirName;
 
     public void parseAndWriteGrammars() {
