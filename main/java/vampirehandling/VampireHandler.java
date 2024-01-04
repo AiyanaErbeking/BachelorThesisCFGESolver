@@ -90,7 +90,7 @@ public class VampireHandler {
         Path outputDirPath = Paths.get(localPathToOutputDirectory + "/" + outputDirectoryName);
 
         // Create directories if they don't exist
-        createDirectoryIfNotExists(inputDirPath);
+        //createDirectoryIfNotExists(inputDirPath);
         createDirectoryIfNotExists(outputDirPath);
 
         int totalFiles = 0;
@@ -156,7 +156,6 @@ public class VampireHandler {
         }
 
     }
-
 
     private static boolean isDirectoryEmpty(String directoryPath) {
         File directory = new File(directoryPath);
