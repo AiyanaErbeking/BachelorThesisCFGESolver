@@ -96,6 +96,9 @@ public class SelectingCFGPairs {
                 String frequency = nextRecord[2];
                 String evaluation = nextRecord[3];
 
+                // Replace ? with ε in the input grammar
+                inputGrammar = inputGrammar.replace("?", "ε");
+
                 // Form a key for the current combination of problem id and evaluation
                 String key = problemId + "_" + evaluation;
 

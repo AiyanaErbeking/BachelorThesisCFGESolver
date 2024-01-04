@@ -43,7 +43,7 @@ public class ContextFreeGrammarEquivalenceProblem {
 
     public String reduceToTPTPFolSat(){
 
-        if (areGrammarsTriviallyUnequal()) return "Trivially Unequal";
+        //if (areGrammarsTriviallyUnequal()) return "Trivially Unequal";
 
         FOLFormula reduction = reduceToFolSat();
         return reduction.writeToTPTP();

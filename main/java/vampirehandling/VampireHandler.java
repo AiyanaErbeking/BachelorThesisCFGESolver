@@ -1,8 +1,12 @@
 package vampirehandling;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
@@ -10,21 +14,12 @@ import java.util.EnumSet;
 public class VampireHandler {
 
     private final String localPathToVampire = "/home/dev/Vampire";
-    private final String localPathToInputDirectory = "/home/dev/Vampire/" + inputDirectoryName;
-    private final String localPathToOutputDirectory = "/home/dev/Vampire/" + outputDirectoryName;
-
-    /**
-     * ensure that there exists a local folder named InputProblems
-     * */
-    public final static String inputDirectoryName = "InputProblems";
-    public final static String outputDirectoryName= "Answers";
+    private final String localPathToOutputDirectory = "/home/dev/Vampire";
+    private final String localPathToInputDirectory = "/home/dev/Vampire";
 
 
     public VampireHandler(){}
 
-
-    public String getLocalPathToInputDirectory() { return localPathToInputDirectory; }
-    public String getLocalPathToOutputDirectory() { return localPathToOutputDirectory; }
     public String getLocalPathToVampire() { return localPathToVampire; }
 
 
@@ -35,8 +30,7 @@ public class VampireHandler {
     }
 
 
-    private String invokeVampire(Path inputFilePath, String timeLimitSeconds, Boolean modeCascSat) throws IOException {
-
+    private String invokeVampire(Path inputFilePath, String timeLimitSeconds, Boolean modeCascSat, String inputDirectoryName) throws IOException {
         // Get the file name from the Path object
         String inputFileName = inputFilePath.getFileName().toString();
 
@@ -47,6 +41,8 @@ public class VampireHandler {
 
         String vampireCommand = "./vampire";
         vampireCommand += " " + vampModeOption + " -t " + timeLimitSeconds + " " + relativePathToInputFile;
+
+        LocalDateTime startTimestamp = LocalDateTime.now();
 
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", vampireCommand);
         processBuilder.directory(new File(getLocalPathToVampire()));
@@ -62,13 +58,18 @@ public class VampireHandler {
             }
         }
 
+        LocalDateTime endTimestamp = LocalDateTime.now();
+        Duration duration = Duration.between(startTimestamp, endTimestamp);
+        long seconds = duration.getSeconds();
+
         try {
             // Wait for the process to complete
             int exitCode = process.waitFor();
 
             if (exitCode == 0) {
                 // Process completed successfully, return the output
-                return "successful solve. time limit: " + timeLimitSeconds + ", mode casc_sat: " + modeCascSat + "\n\n" + outputStringBuilder;
+                return "successful solve. time limit: " + timeLimitSeconds + ", mode casc_sat: " + modeCascSat +
+                        "\nTime taken by Vampire: " + seconds + " seconds\n\n" + outputStringBuilder;
             } else {
                 // Process failed, return an error message or handle accordingly
                 return "Vampire failed to solve the problem. Exit code: " + exitCode + "\n\n" + outputStringBuilder;
@@ -81,19 +82,16 @@ public class VampireHandler {
     }
 
 
-    public void runVampire(String timeLimitSeconds, Boolean modeCascSat){
 
-        if (!isDirectoryEmpty(localPathToOutputDirectory))
-            throw new RuntimeException("the given output directory: " + outputDirectoryName + " is not empty!");
-
-
-        // Specify the directory path
-        String pathToInputDirectory = getLocalPathToInputDirectory();
-        String pathToOutputDirectory = getLocalPathToOutputDirectory();
+    public void runVampire(String timeLimitSeconds, Boolean modeCascSat, String inputDirectoryName, String outputDirectoryName){
 
         // Create a Path object for the directory
-        Path inputDirPath = Paths.get(pathToInputDirectory);
-        Path outputDirPath = Paths.get(pathToOutputDirectory);
+        Path inputDirPath = Paths.get(localPathToInputDirectory + "/" + inputDirectoryName);
+        Path outputDirPath = Paths.get(localPathToOutputDirectory + "/" + outputDirectoryName);
+
+        // Create directories if they don't exist
+        createDirectoryIfNotExists(inputDirPath);
+        createDirectoryIfNotExists(outputDirPath);
 
         int totalFiles = 0;
         try {
@@ -123,17 +121,17 @@ public class VampireHandler {
                         System.out.println(getTimestamp() + "Grindin' file " + fileNumber[0] + " of " + finalTotalFiles + ": " + file.getFileName());
 
                         // Invoke Vampire and get the output
-                        String vampireOutput = invokeVampire(file, timeLimitSeconds, modeCascSat);
+                        String vampireOutput = invokeVampire(file, timeLimitSeconds, modeCascSat, inputDirectoryName);
 
                         String result;
                         if (vampireOutput.contains("Termination reason: Satisfiable")) {
                             result = "SAT";
-                        } else if (vampireOutput.contains("status Unsatisfiable") || vampireOutput.contains("Termination reason: Refutation")) {
+                        } else if (vampireOutput.contains("status Unsatisfiable")) {
                             result = "UNSAT";
                         } else if (vampireOutput.contains("Parsing Error")) {
-                            result = "ParsingError";
+                            result = "VampParsingError";
                         } else {
-                            result = "UNKNOWN";
+                            result = "TIMEOUT";
                         }
 
                         // Write the output to a new file
@@ -166,5 +164,14 @@ public class VampireHandler {
         return files == null || files.length == 0;
     }
 
+    private static void createDirectoryIfNotExists(Path directoryPath) {
+        if (Files.notExists(directoryPath)) {
+            try {
+                Files.createDirectories(directoryPath);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 }

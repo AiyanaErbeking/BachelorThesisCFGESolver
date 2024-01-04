@@ -33,10 +33,9 @@ public class CFGParser {
 
             if (components.length == 2) {
                 String variable = components[0].trim();
-                String[] alternatives = components[1].split("\\s*\\|\\s*");
+                if (Character.isDigit(variable.charAt(0))) variable = "Z" + variable;
 
-                // Add variable to rules map
-                rules.put(variable, new HashSet<>());
+                String[] alternatives = components[1].split("\\s*\\|\\s*");
 
                 for (String alternative : alternatives) {
                     List<String> ruleList = new ArrayList<>();
@@ -48,8 +47,15 @@ public class CFGParser {
 
                         if (part.equals("?") || part.equals("ε") || part.equals("ɛ")) {
                             ruleList.add(ContextFreeGrammar.epsilon);
+                        }
 
-                        } else if (part.length() == 1 && !Character.isUpperCase(part.charAt(0)) && !alphabetLettersInUse.contains(part.charAt(0))) {
+                        // Check if the part starts with a number
+                        else if (Character.isDigit(part.charAt(0))) {
+                            part = "Z" + part;
+                            ruleList.add(part);
+                        }
+
+                        else if (part.length() == 1 && !Character.isUpperCase(part.charAt(0)) && !alphabetLettersInUse.contains(part.charAt(0))) {
 
                             if (nonAlphabetTerminalsToAlphabet.containsKey(part))
                                 ruleList.add(nonAlphabetTerminalsToAlphabet.get(part));
@@ -61,7 +67,9 @@ public class CFGParser {
                                 nonAlphabetTerminalsToAlphabet.put(part, newLetter.toString());
                                 alphabetLettersInUse.add(newLetter);
                             }
-                        } else {
+                        }
+
+                        else {
                             ruleList.add(part);
                         }
                     }

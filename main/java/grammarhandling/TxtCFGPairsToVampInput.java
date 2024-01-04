@@ -19,7 +19,7 @@ public class TxtCFGPairsToVampInput {
     private ContextFreeGrammar C1;
     private ContextFreeGrammar C2;
 
-    private final String inputDirName = "TextCFGPairs";
+    private final String inputDirName = "InputProbsFromIltis";
     private final String inputDirPath = "/home/dev/Vampire/" + inputDirName;
     private final String outputDirName = "InputProblems";
     private final String outputDirPath = "/home/dev/Vampire/" + outputDirName;
@@ -39,30 +39,29 @@ public class TxtCFGPairsToVampInput {
 
     private void processTxtFile(Path txtFilePath) {
         try {
-            // Read the content of the file
-            String content = new String(Files.readAllBytes(txtFilePath), StandardCharsets.UTF_8);
+            String fileName = txtFilePath.getFileName().toString();
 
-            // Split the content into two grammars
-            String[] grammars = content.split("\\n\\s*\\n");
+            if (fileName.contains("TriviallyUnequal")) {
+                // Copy the file to a different location
+                writeToInputProbFile("", fileName);
+            } else {
+                // Read the content of the file
+                String content = Files.readString(txtFilePath);
 
-            String nameOfCurrentFileRead = String.valueOf(txtFilePath.getFileName());
+                // Split the content into two grammars
+                String[] grammars = content.split("\\n\\s*\\n");
 
-            C1 = ContextFreeGrammar.parse("solution", grammars[0]);
-            C2 = ContextFreeGrammar.parse("student", grammars[1]);
+                // Initialize C1 and C2 with parsed grammars
+                C1 = ContextFreeGrammar.parse("cfgone", grammars[0]);
+                C2 = ContextFreeGrammar.parse("cfgtwo", grammars[1]);
 
-            if (C1==null | C2==null) throw new RuntimeException("parsing seems to have failed for at least one grammar");
+                ContextFreeGrammarEquivalenceProblem cfge = new ContextFreeGrammarEquivalenceProblem(C1, C2);
 
-            ContextFreeGrammarEquivalenceProblem cfge = new ContextFreeGrammarEquivalenceProblem(C1, C2);
+                String tptpReductionString = cfge.reduceToTPTPFolSat();
 
-            String tptpReductionString = cfge.reduceToTPTPFolSat();
-
-            // so that these files can be skipped when feeding to Vampire
-            if (tptpReductionString.equals("Trivially Unequal"))
-                nameOfCurrentFileRead = nameOfCurrentFileRead.replace(".txt", "TriviallyUnequal");
-
-            writeToInputProbFile(tptpReductionString, nameOfCurrentFileRead);
-
-        } catch (IOException e) {
+                writeToInputProbFile(tptpReductionString, fileName);
+            }
+        }catch (IOException e) {
             e.printStackTrace();
         }
     }
