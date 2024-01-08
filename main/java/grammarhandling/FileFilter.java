@@ -15,7 +15,7 @@ import java.nio.file.StandardCopyOption;
 public class FileFilter {
 
     private final String localPathToAllDirectories = "/home/dev/Vampire/";
-    private final String inputProblemFileDirectoryName = "InputProblemsWOUnknown";
+    private final String inputProblemFileDirectoryName = "InputProblems";
 
     public FileFilter(){}
 

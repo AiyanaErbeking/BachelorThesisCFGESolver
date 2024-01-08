@@ -10,6 +10,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * This class provides functionality for, given a single .csv file with many (think thousands) of student-given grammars,
@@ -26,7 +27,7 @@ import java.util.Map;
  */
 public class SelectingCFGPairs {
 
-    private final String outputDirName = "TextCFGPairsWOUnknown";
+    private final String outputDirName = "TextCFGPairs";
     /**
      * change this path to the directory to which all grammar-pair .txt files should be written
      * */
@@ -76,10 +77,6 @@ public class SelectingCFGPairs {
 
     public void readCSVFile(){
 
-        if (!isDirectoryEmpty(outputDirPath))
-            throw new RuntimeException("the given output directory: " + outputDirName + " is not empty!");
-
-
         String csvFilePath = "/home/dev/Vampire/iltis-cfg-attempts.csv";
 
         try (CSVReader csvReader = new CSVReaderBuilder(new FileReader(csvFilePath)).withSkipLines(1).build()) {
@@ -99,18 +96,25 @@ public class SelectingCFGPairs {
                 // Replace ? with ε in the input grammar
                 inputGrammar = inputGrammar.replace("?", "ε");
 
+                /*
                 // Skip grammars with "UNKNOWN" evaluation
                 if ("UNKNOWN".equals(evaluation)) {
                     continue;
                 }
+               */
 
                 // Form a key for the current combination of problem id and evaluation
-                String key = problemId + "_" + evaluation;
+                // UNKNOWN and EQUIVALENT are treated equally
+                String eval;
+                if (Objects.equals(evaluation, "UNKNOWN"))
+                    eval = "EQUIVALENT";
+                else eval = evaluation;
+
+                String key = problemId + "_" + eval;
 
                 // Increment the count for the current combination
                 int count = rowCounts.getOrDefault(key, 0) + 1;
 
-                //
                 if (count <= numMaxCFGSamples) {
                     rowCounts.put(key, count);
 

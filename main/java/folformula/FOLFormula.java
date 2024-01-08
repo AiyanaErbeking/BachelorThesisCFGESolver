@@ -2,6 +2,7 @@ package folformula;
 
 import folformula.tree.Tree;
 import folformula.writers.TPTPWriter;
+import folformula.writers.LaTeXWriter;
 
 import java.util.ArrayList;
 
@@ -66,6 +67,10 @@ public abstract class FOLFormula extends Tree {
         String tptpString = "fof(cfge, negated_conjecture, ";
 
         return tptpString + tptpWriter.visitChildrenRecursively(this) + " ).";
+    }
+
+    public String writeToLaTeX(){
+        LaTeXWriter laTeXWriter = new LaTeXWriter();
     }
 
 }
