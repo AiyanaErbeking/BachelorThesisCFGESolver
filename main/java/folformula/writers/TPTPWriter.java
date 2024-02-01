@@ -27,8 +27,9 @@ public class TPTPWriter extends TreeVisitor {
     protected String getLeq(String X, String Y){ return " leq(" + X + ", " + Y + ")"; }
 
     protected String getEquals(String X, String Y){ return X + "=" + Y; }
+    //protected String getEquals(String X, String Y){ return getLeq(X, Y) + getAnd() + getLeq(Y, X); }
 
-    protected String getLetterAtPos(String letter, String position){ return "letter_is_" + letter + "(" + position + ")";}
+    protected String getLetterAtPos(String letter, String position){ return "q_" + letter + "(" + position + ")";}
 
     protected String getTableau(String grammarName, String grammarVar, String positionX, String positionY){
         // predicates can't contain capital letters as these are reserved for variables

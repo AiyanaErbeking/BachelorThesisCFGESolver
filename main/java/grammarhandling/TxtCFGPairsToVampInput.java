@@ -52,8 +52,8 @@ public class TxtCFGPairsToVampInput {
                 String[] grammars = content.split("\\n\\s*\\n");
 
                 // Initialize C1 and C2 with parsed grammars
-                C1 = ContextFreeGrammar.parse("cfgone", grammars[0]);
-                C2 = ContextFreeGrammar.parse("cfgtwo", grammars[1]);
+                C1 = ContextFreeGrammar.parse("o", grammars[0]);
+                C2 = ContextFreeGrammar.parse("t", grammars[1]);
 
                 ContextFreeGrammarEquivalenceProblem cfge = new ContextFreeGrammarEquivalenceProblem(C1, C2);
 

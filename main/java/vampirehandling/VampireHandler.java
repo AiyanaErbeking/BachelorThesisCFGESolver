@@ -10,6 +10,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class VampireHandler {
 
@@ -40,7 +42,7 @@ public class VampireHandler {
         String vampModeOption = modeCascSat ? "--mode casc_sat" : "--mode casc";
 
         String vampireCommand = "./vampire";
-        vampireCommand += " " + vampModeOption + " -t " + timeLimitSeconds + " " + relativePathToInputFile;
+        vampireCommand += " " + vampModeOption + " --cores 12 -t " + timeLimitSeconds + " " + relativePathToInputFile;
 
         LocalDateTime startTimestamp = LocalDateTime.now();
 
@@ -62,6 +64,17 @@ public class VampireHandler {
         Duration duration = Duration.between(startTimestamp, endTimestamp);
         long seconds = duration.getSeconds();
 
+        String timeElapsedRegex = "Success in time (\\d+\\.\\d+)";
+        Pattern timeElapsedPattern = Pattern.compile(timeElapsedRegex);
+        Matcher timeElapsedMatcher = timeElapsedPattern.matcher(outputStringBuilder);
+
+        double timeElapsed = 0.0;
+
+        if (timeElapsedMatcher.find()) {
+            String timeElapsedStr = timeElapsedMatcher.group(1);
+            timeElapsed = Double.parseDouble(timeElapsedStr);
+        }
+
         try {
             // Wait for the process to complete
             int exitCode = process.waitFor();
@@ -69,7 +82,7 @@ public class VampireHandler {
             if (exitCode == 0) {
                 // Process completed successfully, return the output
                 return "successful solve. time limit: " + timeLimitSeconds + ", mode casc_sat: " + modeCascSat +
-                        "\nTime taken by Vampire: " + seconds + " seconds\n\n" + outputStringBuilder;
+                        "\nTotal time spent grindin: " + timeElapsed + " seconds\n\n" + outputStringBuilder;
             } else {
                 // Process failed, return an error message or handle accordingly
                 return "Vampire failed to solve the problem. Exit code: " + exitCode + "\n\n" + outputStringBuilder;
@@ -123,9 +136,20 @@ public class VampireHandler {
                         // Invoke Vampire and get the output
                         String vampireOutput = invokeVampire(file, timeLimitSeconds, modeCascSat, inputDirectoryName);
 
+                        String regex = "TRYING \\[(\\d+)\\]";
+                        Pattern pattern = Pattern.compile(regex);
+                        Matcher matcher = pattern.matcher(vampireOutput);
+
                         String result;
                         if (vampireOutput.contains("Termination reason: Satisfiable")) {
-                            result = "SAT";
+
+                            int lastMatchedNumber = -1;
+
+                            while (matcher.find()) {
+                                lastMatchedNumber = Integer.parseInt(matcher.group(1));
+                            }
+                            result = "SAT_ModelSize" + lastMatchedNumber;
+
                         } else if (vampireOutput.contains("status Unsatisfiable")) {
                             result = "UNSAT";
                         } else if (vampireOutput.contains("Parsing Error")) {

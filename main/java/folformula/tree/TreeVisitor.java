@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 /**
  * this class provides a means for recursively visiting all subtrees of a given tree.
- * this class is extended by FOL Formula writers, wherein the method inspect is overwritten for each type of tree (subFormula)
+ * this class is extended by FOL Formula writers, wherein the method checkOut is overwritten for each type of tree (subFormula)
  * */
 public abstract class TreeVisitor {
 

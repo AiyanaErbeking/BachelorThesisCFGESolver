@@ -4,11 +4,11 @@ import vampirehandling.VampireHandler;
 public class Main {
     public static void main(String[] args) {
 
-        String[] times = {"3600"};
-        Boolean[] cascSat = {Boolean.FALSE, Boolean.TRUE};
+        String[] times = {"10000"};
+        Boolean[] cascSat = {Boolean.TRUE};
 
-        String standardOutputDirectoryNamePrefix = "Answers";
-        String inputDirectoryName = "Answers_CascSat_600_TIMEOUTS";
+        String standardOutputDirectoryNamePrefix = "Answers_NotE";
+        String inputDirectoryName = "InputProbsNotE";
         String answerFileDirectoryName;
 
         VampireHandler vampireHandler = new VampireHandler();
@@ -22,9 +22,9 @@ public class Main {
                 // handler creates new output directory with given name
                 vampireHandler.runVampire(time, mode, inputDirectoryName, answerFileDirectoryName);
 
-                fileFilter.filterAndCopyTimeouts(answerFileDirectoryName);
+                //fileFilter.filterAndCopyTimeouts(answerFileDirectoryName);
 
-                inputDirectoryName = answerFileDirectoryName + "_TIMEOUTS";
+                //inputDirectoryName = answerFileDirectoryName + "_TIMEOUTS";
             }
 
             // so that each casc mode gets the full list of problems, regardless of whether some were solved by the other mode

@@ -5,7 +5,11 @@ import grammarhandling.FileFilter;
 import grammarhandling.SelectingCFGPairs;
 import grammarhandling.TxtCFGPairsToVampInput;
 import org.junit.jupiter.api.Test;
+import plotting.FindingAverageRuntime;
 import vampirehandling.VampireHandler;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ReductionCfgeSatTest {
 
@@ -16,17 +20,32 @@ public class ReductionCfgeSatTest {
     @Test
     public void  testReduction(){
 
-        String solutionGrammarFive = "S -> A T\n" +
-                "A -> a\n" +
-                "T -> S B\n" +
-                "B -> b\n";
-        ContextFreeGrammar cfg = ContextFreeGrammar.parse("g", solutionGrammarFive);
+        String solutionGrammarFive = "S -> Xa Xb\n" +
+                "S -> Xa S1\n" +
+                "S1 -> S Xb\n" +
+                "Xb -> b\n" +
+                "Xa -> a\n";
 
+        String regGramm = "S -> A B\n" +
+                "A -> A Xa\n" +
+                "B -> Xb B\n" +
+                "Xb -> b\n" +
+                "Xa -> a\n" +
+                "B -> b\n" +
+                "A -> a";
+
+        String gee = "S -> A S\n" +
+                "S -> a\n" +
+                "A -> a\n";
+
+
+        ContextFreeGrammar cfg = ContextFreeGrammar.parse("o", gee);
         String cfg2 = "S -> a\n";
-        ContextFreeGrammar cfgtwo = ContextFreeGrammar.parse("g2", solutionGrammarFive);
+        String cfg3 = "S -> b\n";
+        ContextFreeGrammar cfgtwo = ContextFreeGrammar.parse("t", gee);
 
-        ContextFreeGrammar ez = ContextFreeGrammar.parse("ez1", solutionGrammarFive);
-        ContextFreeGrammar ez2 = ContextFreeGrammar.parse("ez2", solutionGrammarFive);
+        ContextFreeGrammar ez = ContextFreeGrammar.parse("ez1", cfg2);
+        ContextFreeGrammar ez2 = ContextFreeGrammar.parse("ez2", cfg3);
 
         //System.out.println( "Start vars: " + cfg.getStartVariables());
 
@@ -47,12 +66,10 @@ public class ReductionCfgeSatTest {
 
          */
 
-        ContextFreeGrammarEquivalenceProblem cfge = new ContextFreeGrammarEquivalenceProblem(ez, ez2);
-        System.out.println(cfge.reduceToTPTPFolSat());
+        ContextFreeGrammarEquivalenceProblem cfge = new ContextFreeGrammarEquivalenceProblem(cfg, cfgtwo);
+        //System.out.println(cfge.reduceToLaTeXFolSat());
 
-        System.out.println(cfge.reduceToTPTPFolSat());
-
-
+        //System.out.println(cfge.reduceToLaTeXFolSat());
 
 
         //System.out.println(reductionCfgeToFolSat.encodingWordStructure(grammar, grammar).writeToTPTP());
@@ -82,6 +99,15 @@ public class ReductionCfgeSatTest {
         TxtCFGPairsToVampInput txtCFGPairsToVampInput = new TxtCFGPairsToVampInput();
         //txtCFGPairsToVampInput.parseAndWriteGrammars();
 
+        List<String> directoryNames = new ArrayList<>();
+        directoryNames.add("Answers_NotE_CascSat_10000");
+        directoryNames.add("Answers_NotE_CascSat_90000");
+        directoryNames.add("Answers_NotE_CascSat_80000");
+
+        FindingAverageRuntime findingAverageRuntime = new FindingAverageRuntime();
+        //findingAverageRuntime.writeRuntimesFromAllDirectories(directoryNames);
+
+        System.out.println(findingAverageRuntime.getListOfAverageRuntimes());
     }
 
 }

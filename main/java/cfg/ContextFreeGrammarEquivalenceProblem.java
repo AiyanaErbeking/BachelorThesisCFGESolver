@@ -46,7 +46,13 @@ public class ContextFreeGrammarEquivalenceProblem {
         //if (areGrammarsTriviallyUnequal()) return "Trivially Unequal";
 
         FOLFormula reduction = reduceToFolSat();
-        return reduction.writeToTPTP();
+        return reduction.writeToFOF();
     }
+
+    public String reduceToLaTeXFolSat(){
+        return reduceToFolSat().writeToLaTeX();
+    }
+
+    public String reduceToTFFFolSat(){ return reduceToFolSat().writeToTFF(); }
 
 }
