@@ -8,13 +8,32 @@ import java.util.Scanner;
 public class FindingAverageRuntime {
 
     public String localPathToAllDirectories = "/home/dev/Vampire/";
-    public String localPathToOutputDirectory = localPathToAllDirectories + "RuntimesPerFile";
+    public String localPathToRuntimesListDirectory = localPathToAllDirectories + "RuntimesPerFile";
+
+    public String localPathToModelSizeDirectory = localPathToAllDirectories + "Answers_NotE_ModelSizes";
+
+    public List<Integer> getListOfModelSizes(){
+
+        List<Integer> modelSizes = new ArrayList<>();
+
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(localPathToModelSizeDirectory))) {
+            for (Path filePath : directoryStream) {
+                if (Files.isRegularFile(filePath)) {
+                    modelSizes.add(Integer.parseInt(extractValueFromFile(filePath, "fmb size ")));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return modelSizes;
+    }
 
     public List<Double> getListOfAverageRuntimes(){
 
         List<Double> avRuntimes = new ArrayList<>();
 
-        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(localPathToOutputDirectory))) {
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(localPathToRuntimesListDirectory))) {
             for (Path filePath : directoryStream) {
                 if (Files.isRegularFile(filePath)) {
                     avRuntimes.add(calculateAverageTime(String.valueOf(filePath)));
@@ -61,7 +80,7 @@ public class FindingAverageRuntime {
 
     public void writeRuntimesFromAllDirectories(List<String> directoryNames){
         for (String directory : directoryNames){
-            processDirectory(localPathToAllDirectories + directory, localPathToOutputDirectory, "Success in time ");
+            processDirectory(localPathToAllDirectories + directory, localPathToRuntimesListDirectory, "Success in time ");
         }
     }
 

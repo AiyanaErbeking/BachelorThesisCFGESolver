@@ -20,11 +20,7 @@ public class ReductionCfgeSatTest {
     @Test
     public void  testReduction(){
 
-        String solutionGrammarFive = "S -> Xa Xb\n" +
-                "S -> Xa S1\n" +
-                "S1 -> S Xb\n" +
-                "Xb -> b\n" +
-                "Xa -> a\n";
+        String solutionGrammarFive = "S -> a";
 
         String regGramm = "S -> A B\n" +
                 "A -> A Xa\n" +
@@ -39,10 +35,10 @@ public class ReductionCfgeSatTest {
                 "A -> a\n";
 
 
-        ContextFreeGrammar cfg = ContextFreeGrammar.parse("o", gee);
+        ContextFreeGrammar cfg = ContextFreeGrammar.parse("o", solutionGrammarFive);
         String cfg2 = "S -> a\n";
         String cfg3 = "S -> b\n";
-        ContextFreeGrammar cfgtwo = ContextFreeGrammar.parse("t", gee);
+        ContextFreeGrammar cfgtwo = ContextFreeGrammar.parse("t", solutionGrammarFive);
 
         ContextFreeGrammar ez = ContextFreeGrammar.parse("ez1", cfg2);
         ContextFreeGrammar ez2 = ContextFreeGrammar.parse("ez2", cfg3);
@@ -67,7 +63,7 @@ public class ReductionCfgeSatTest {
          */
 
         ContextFreeGrammarEquivalenceProblem cfge = new ContextFreeGrammarEquivalenceProblem(cfg, cfgtwo);
-        //System.out.println(cfge.reduceToLaTeXFolSat());
+        System.out.println(cfge.reduceToTPTPFolSat());
 
         //System.out.println(cfge.reduceToLaTeXFolSat());
 
@@ -107,7 +103,7 @@ public class ReductionCfgeSatTest {
         FindingAverageRuntime findingAverageRuntime = new FindingAverageRuntime();
         //findingAverageRuntime.writeRuntimesFromAllDirectories(directoryNames);
 
-        System.out.println(findingAverageRuntime.getListOfAverageRuntimes());
+        //System.out.println(findingAverageRuntime.getListOfModelSizes());
     }
 
 }
